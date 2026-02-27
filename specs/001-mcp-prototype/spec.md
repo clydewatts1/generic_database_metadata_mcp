@@ -5,6 +5,15 @@
 **Status**: Draft  
 **Input**: User description: "Implement the feature specification based on the updated constitution. I want to build a working prototype based on the constitution"
 
+## Clarifications
+
+### Session 2026-02-27
+- Q: How should nodes (Object Nodes and MetaTypes) be uniquely identified in the graph? → A: UUID v4
+- Q: In SC-001, what is the specific maximum size allowed for the "minimal response payload size"? → A: < 10KB
+- Q: To keep the prototype focused, what should be explicitly marked as out-of-scope? → A: Real-time streaming & binary data
+- Q: What is the expected maximum size of the graph (number of nodes/edges) for this prototype? → A: Small (< 100k nodes/edges)
+- Q: For the prototype, what should be the default biological decay rate for Stigmergic Edges? → A: Aggressive (hours/days)
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Genesis Seed Ingestion (Priority: P1)
@@ -88,10 +97,16 @@ As a user, I want my queries and stigmergic traces to be scoped to my domain (e.
 
 ## Requirements *(mandatory)*
 
+### Out of Scope
+
+- Real-time streaming ingestion.
+- Binary data storage.
+
 ### Dependencies and Assumptions
 
 - **Assumption**: The underlying graph database can handle dynamic schema updates without significant downtime.
 - **Assumption**: The AI agent has the capability to parse and understand the compact serialization format.
+- **Assumption**: The expected maximum size of the graph for this prototype is small (< 100k nodes/edges).
 - **Dependency**: Requires an authentication/authorization mechanism to provide the profile_id and domain_scope for scoping.
 
 
@@ -107,7 +122,7 @@ As a user, I want my queries and stigmergic traces to be scoped to my domain (e.
 - **FR-008**: System MUST serialize all multi-node responses using the a compact format.
 - **FR-009**: System MUST create Stigmergic Edges with an initial confidence score and last_accessed timestamp.
 - **FR-010**: System MUST reinforce (increase confidence) Stigmergic Edges upon successful traversal.
-- **FR-011**: System MUST decay confidence scores over time and prune edges below a minimum threshold.
+- **FR-011**: System MUST decay confidence scores over time (using an aggressive default rate of hours/days for the prototype) and prune edges below a minimum threshold.
 - **FR-012**: System MUST include `rationale_summary` and `created_by_prompt_hash` on all AI-generated modifications.
 - **FR-013**: System MUST apply Cascading Wither to edges attached to deprecated/deleted nodes.
 - **FR-014**: System MUST inject profile_id and domain_scope into all tool invocations.
@@ -117,8 +132,8 @@ As a user, I want my queries and stigmergic traces to be scoped to my domain (e.
 
 ### Key Entities
 
-- **MetaType**: Defines the schema for Object Types and Edge Types, including a health_score.
-- **Object Node**: An instance of a MetaType, representing a Business Term or Technical Node.
+- **MetaType**: Defines the schema for Object Types and Edge Types, including a health_score. Uniquely identified by a UUID v4.
+- **Object Node**: An instance of a MetaType, representing a Business Term or Technical Node. Uniquely identified by a UUID v4.
 - **Stigmergic Edge**: A relationship between nodes, containing `confidence_score`, `last_accessed`, `rationale_summary`, and `created_by_prompt_hash`.
 - **Function Object**: Represents an ETL operation or logic transformation.
 
@@ -126,7 +141,7 @@ As a user, I want my queries and stigmergic traces to be scoped to my domain (e.
 
 ### Measurable Outcomes
 
-- **SC-001**: The `bulk_ingest_seed` tool can ingest 10,000 nodes in under 1 minute without exceeding a minimal response payload size to the AI.
+- **SC-001**: The `bulk_ingest_seed` tool can ingest 10,000 nodes in under 1 minute without exceeding a 10KB response payload size to the AI.
 - **SC-002**: schema validation catches 100% of schema violations before database insertion.
 - **SC-003**: Query responses containing more than 5 nodes are consistently paginated and serialized in a compact format, reducing token usage by at least 40% compared to raw standard verbose formats.
 - **SC-004**: Stigmergic edges that are not accessed for the defined decay period are automatically pruned from the graph.
