@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from src.mcp_server.app import mcp
-from src.models.serialization import serialise
-from src.graph.nodes import get_node_by_id
-from src.graph.edges import create_edge, get_edge_by_id, reinforce_edge
-from src.utils.logging import get_logger
+from ..app import mcp
+from ...models.serialization import serialise
+from ...graph.nodes import get_node_by_id
+from ...graph.edges import create_edge, get_edge_by_id, reinforce_edge
+from ...utils.logging import get_logger
 
 logger = get_logger(__name__)
 

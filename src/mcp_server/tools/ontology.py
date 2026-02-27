@@ -6,11 +6,11 @@ from typing import Any
 
 from pydantic import ValidationError as PydanticValidationError
 
-from src.mcp_server.app import mcp
-from src.models.base import MetaTypeCreate, TypeCategory
-from src.models.serialization import serialise
-from src.graph.ontology import create_meta_type, list_meta_types
-from src.utils.logging import get_logger
+from ..app import mcp
+from ...models.base import MetaTypeCreate, TypeCategory
+from ...models.serialization import serialise
+from ...graph.ontology import create_meta_type, list_meta_types
+from ...utils.logging import get_logger
 
 logger = get_logger(__name__)
 

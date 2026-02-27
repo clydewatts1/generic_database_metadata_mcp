@@ -5,9 +5,9 @@ embodying the stigmergic «use it or lose it» principle.
 """
 from __future__ import annotations
 
-from src.mcp_server.app import mcp
-from src.graph.query import query_graph as _query_graph
-from src.utils.logging import get_logger
+from ..app import mcp
+from ...graph.query import query_graph as _query_graph
+from ...utils.logging import get_logger
 
 logger = get_logger(__name__)
 

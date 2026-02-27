@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.mcp_server.app import mcp
-from src.models.base import ObjectNodeCreate
-from src.models.serialization import serialise
-from src.graph.ontology import get_meta_type_by_id, get_meta_type_by_name, decrement_health_score
-from src.graph.nodes import create_node, bulk_ingest
-from src.utils.logging import ValidationError, CircuitBreakerError, NotFoundError, get_logger
+from ..app import mcp
+from ...models.base import ObjectNodeCreate
+from ...models.serialization import serialise
+from ...graph.ontology import get_meta_type_by_id, get_meta_type_by_name, decrement_health_score
+from ...graph.nodes import create_node, bulk_ingest
+from ...utils.logging import ValidationError, CircuitBreakerError, NotFoundError, get_logger
 
 logger = get_logger(__name__)
 

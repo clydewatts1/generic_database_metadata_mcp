@@ -3,7 +3,7 @@
 ## **1\. Core Identity & Architecture**
 
 * **Purpose:** Build a lightweight, context-frugal Model Context Protocol (MCP) server that mimics Teradata Metadata Services, specifically functioning as a "Glossary Weaver."  
-* **Tech Stack:** Python, mcp library (FastMCP recommended), and FalkorDBLite for the embedded, lightweight graph database.  
+* **Tech Stack:** Python, mcp library (MCP Python SDK - mcp), and FalkorDBLite for the embedded, lightweight graph database.  
 * **Core Paradigm:** The system must be **Stigmergic** (the AI leaves "pheromone traces" and semantic connections in the graph environment for future interactions) and **Context Frugal** (never overwhelm the LLM context window).
 
 ## **2\. The Dynamic Pydantic Meta-Ontology**

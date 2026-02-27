@@ -1,4 +1,4 @@
-"""FastMCP application instance – imported by all tool modules.
+"""MCP application instance – imported by all tool modules.
 
 Keeping the mcp instance in its own module breaks the circular import that
 would arise if tools imported from server.py and server.py imported tools.
@@ -6,7 +6,7 @@ would arise if tools imported from server.py and server.py imported tools.
 
 from __future__ import annotations
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP  # Standard mcp.server.fastmcp from mcp package
 
 mcp = FastMCP(
     name="StigmergicMetadataServer",
