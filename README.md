@@ -2,6 +2,8 @@
 
 A **stigmergic, context-frugal metadata MCP server** backed by FalkorDB.
 
+**Transport**: HTTP server with Server-Sent Events (SSE) on `localhost:8000`
+
 The server exposes a graph of typed metadata objects whose edges carry a living
 `confidence_score`.  Edges are reinforced every time they are traversed and
 decay when left unused — embodying the "use it or lose it" principle from ant
@@ -80,13 +82,41 @@ pip install -r requirements.txt
 
 ---
 
-## Running the MCP Server
+## Running the MCP Server (SSE over HTTP)
+
+The server runs as an HTTP server with **Server-Sent Events (SSE)** transport on `http://127.0.0.1:8000`:
 
 ```bash
+# Activate venv first
+.venv\Scripts\activate  # Windows
+# or
+source .venv/bin/activate  # macOS / Linux
+
+# Start the server
 python -m src.mcp_server.server
-# or via the entry point
-python src/mcp_server/server.py
 ```
+
+The server will log:
+```
+Starting Stigmergic MCP Metadata Server on http://127.0.0.1:8000 (SSE)...
+```
+
+Alternatively, use uvicorn directly:
+```bash
+uvicorn src.mcp_server.server:app --host 127.0.0.1 --port 8000
+```
+
+---
+
+## Testing with MCP Inspector
+
+Once the server is running, connect via the MCP Inspector:
+
+```bash
+npx @modelcontextprotocol/inspector
+```
+
+In the Inspector UI, configure an SSE connection to `http://127.0.0.1:8000` and start testing the 7 MCP tools.
 
 ---
 
