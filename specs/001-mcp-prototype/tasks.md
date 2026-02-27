@@ -37,13 +37,13 @@
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] Write tests for MetaType registration in tests/test_ontology.py
+- [x] T009 [P] [US1] Write tests for MetaType registration in tests/unit/test_ontology.py
 
 ### Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Implement MetaType graph operations (create, get) in src/graph/ontology.py
-- [ ] T011 [US1] Implement dynamic Pydantic model generation in src/models/dynamic.py
-- [ ] T012 [US1] Implement `register_meta_type` MCP tool in src/mcp_server/tools/ontology.py
+- [x] T010 [P] [US1] Implement MetaType graph operations (create, get) in src/graph/ontology.py
+- [x] T011 [US1] Implement dynamic Pydantic model generation in src/models/dynamic.py
+- [x] T012 [US1] Implement `register_meta_type` MCP tool in src/mcp_server/tools/ontology.py
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently.
 
