@@ -112,9 +112,9 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T024 [P] Documentation updates in README.md
-- [ ] T025 Run quickstart.md validation to ensure the prototype works end-to-end
-- [ ] T026 Ensure all MCP tools return TOON formatted responses where applicable
+- [x] T024 [P] Documentation updates in README.md
+- [x] T025 Run quickstart.md validation to ensure the prototype works end-to-end
+- [x] T026 Ensure all MCP tools return TOON formatted responses where applicable
 
 ---
 
