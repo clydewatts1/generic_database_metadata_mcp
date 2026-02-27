@@ -1,12 +1,12 @@
-"""MCP application instance – imported by all tool modules.
+"""MCP application instance – imported by all tool modules and exposed as ASGI app.
 
 Keeping the mcp instance in its own module breaks the circular import that
 would arise if tools imported from server.py and server.py imported tools.
+
+For SSE transport, the FastMCP instance is run as an ASGI app via uvicorn.
 """
 
-from __future__ import annotations
-
-from mcp.server.fastmcp import FastMCP  # Standard mcp.server.fastmcp from mcp package
+from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP(
     name="StigmergicMetadataServer",
@@ -17,3 +17,6 @@ mcp = FastMCP(
         "Payloads are capped at 10 KB. Paginate large result sets using the `page` parameter."
     ),
 )
+
+# Expose the FastMCP instance as an ASGI app for SSE transport
+app = mcp.sse_app

@@ -2,6 +2,7 @@ mcp
 pydantic
 falkordb
 freezegun
+uvicorn
 
 # Dev / testing
 pytest

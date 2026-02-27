@@ -1,9 +1,9 @@
 """MCP server entry-point for the Stigmergic MCP Metadata Server.
 
-Uses the standard mcp.server.fastmcp.FastMCP from the mcp package.
+Uses the standard mcp.server.fastmcp.FastMCP with SSE transport via uvicorn.
 """
 
-from __future__ import annotations
+import sys
 
 from .app import mcp  # noqa: F401 – re-export for convenience
 from ..utils.logging import get_logger
@@ -23,11 +23,34 @@ def _register_tools() -> None:
     logger.info("All MCP tools registered.")
 
 
+# Create ASGI app for SSE transport
+def _create_app():
+    """Create the ASGI application for SSE transport."""
+    _register_tools()
+    # mcp.sse_app is a method that returns the ASGI app
+    return mcp.sse_app
+
+
+# For uvicorn to find the app: uvicorn src.mcp_server.server:app
+app = _create_app()
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    _register_tools()
-    logger.info("Starting Stigmergic MCP Metadata Server...")
-    mcp.run()
+    logger.info("Starting Stigmergic MCP Metadata Server on http://127.0.0.1:8000 (SSE)...")
+    
+    try:
+        import uvicorn
+        
+        uvicorn.run(
+            app,
+            host="127.0.0.1",
+            port=8000,
+            log_level="info",
+        )
+    except ImportError:
+        logger.error("uvicorn not installed. Install with: pip install uvicorn")
+        sys.exit(1)
