@@ -33,6 +33,7 @@ def _reset_failure_count(meta_type_id: str) -> None:
 def insert_node(
     meta_type_name: str,
     properties: Dict[str, Any],
+    profile_id: str,
     domain_scope: str = "Global",
 ) -> str:
     """Insert a single Object Node of the given MetaType.
@@ -43,7 +44,8 @@ def insert_node(
     Args:
         meta_type_name: Name of the registered MetaType (e.g. "Dashboard").
         properties: Dict of field values to store on the node.
-        domain_scope: Domain this node belongs to. Defaults to "Global".
+        profile_id: ID of the user/profile creating this node (Rule 5.1).
+        domain_scope: Domain this node belongs to (Rule 5.2). Defaults to "Global".
 
     Returns:
         TOON JSON with {"id": "<uuid>"} on success, or {"error": ...} on failure.
@@ -57,10 +59,12 @@ def insert_node(
         data = ObjectNodeCreate(
             meta_type_id=mt.id,
             domain_scope=domain_scope,
+            profile_id=profile_id,
             properties=properties,
         )
         node = create_node(mt, data)
         _reset_failure_count(mt.id)
+        logger.info("Tool insert_node: created node in domain %s by user %s", domain_scope, profile_id)
         return serialise({"id": node.id})
     except CircuitBreakerError as exc:
         return serialise(exc.to_dict())
@@ -75,6 +79,7 @@ def insert_node(
 def bulk_ingest_seed(
     meta_type_name: str,
     records: List[Dict[str, Any]],
+    profile_id: str,
     domain_scope: str = "Global",
 ) -> str:
     """Bulk-ingest initial seed data for a MetaType without overwhelming AI context.
@@ -85,7 +90,8 @@ def bulk_ingest_seed(
     Args:
         meta_type_name: Name of the registered MetaType.
         records: List of property dicts to insert as ObjectNodes.
-        domain_scope: Domain scope for all inserted nodes.
+        profile_id: ID of the user/profile performing the bulk ingest (Rule 5.1).
+        domain_scope: Domain scope for all inserted nodes (Rule 5.2).
 
     Returns:
         TOON JSON summary: {"meta_type": ..., "inserted": N, "failed": M}.
@@ -95,6 +101,6 @@ def bulk_ingest_seed(
     if mt is None:
         return serialise({"error": "NOT_FOUND", "message": f"MetaType '{meta_type_name}' not found."})
 
-    summary = bulk_ingest(mt, records, domain_scope=domain_scope)
-    logger.info("bulk_ingest_seed: %s", summary)
+    summary = bulk_ingest(mt, records, domain_scope=domain_scope, profile_id=profile_id)
+    logger.info("bulk_ingest_seed by user %s in domain %s: %s", profile_id, domain_scope, summary)
     return serialise(summary)

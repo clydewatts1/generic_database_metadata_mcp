@@ -18,6 +18,8 @@ def register_meta_type(
     name: str,
     type_category: str,
     schema_definition: Dict[str, Any],
+    profile_id: str,
+    domain_scope: str = "Global",
 ) -> str:
     """Register a new MetaType (Object Type or Edge Type) in the graph.
 
@@ -27,6 +29,8 @@ def register_meta_type(
         schema_definition: JSON Schema dict defining fields and their types.
             Each key is a field name; value is {"type": "string|integer|float|boolean|array",
             "required": true|false}.
+        profile_id: ID of the user/profile registering this type (Rule 5.1).
+        domain_scope: Domain this MetaType applies to (Rule 5.2). Defaults to "Global".
 
     Returns:
         TOON JSON with the created MetaType id, name, and schema summary.
@@ -41,8 +45,8 @@ def register_meta_type(
         return serialise({"error": "VALIDATION_ERROR", "message": str(exc)})
 
     try:
-        mt = create_meta_type(data)
-        logger.info("Tool register_meta_type: created %s", mt.name)
+        mt = create_meta_type(data, profile_id=profile_id, domain_scope=domain_scope)
+        logger.info("Tool register_meta_type: created %s by %s in %s", mt.name, profile_id, domain_scope)
         return serialise({
             "id": mt.id,
             "name": mt.name,
@@ -54,16 +58,26 @@ def register_meta_type(
 
 
 @mcp.tool()
-def list_meta_types_tool() -> str:
-    """List all registered MetaTypes in the graph.
+def list_meta_types_tool(
+    profile_id: str,
+    domain_scope: str = "Global",
+) -> str:
+    """List MetaTypes accessible to the user in their domain.
+
+    Rule 5.2: Only returns MetaTypes in the user's domain_scope or Global scope.
+
+    Args:
+        profile_id: ID of the requesting user (Rule 5.1).
+        domain_scope: User's domain scope (Rule 5.2). Defaults to "Global".
 
     Returns:
-        TOON JSON array of MetaType summaries.
+        TOON JSON array of MetaType summaries accessible to this user.
     """
-    types = list_meta_types()
+    types = list_meta_types(domain_scope=domain_scope)
     items = [
-        {"id": mt.id, "name": mt.name, "tc": mt.type_category.value, "hs": mt.health_score}
+        {"id": mt.id, "name": mt.name, "tc": mt.type_category.value, "hs": mt.health_score, "ds": mt.domain_scope}
         for mt in types
     ]
+    logger.info("Tool list_meta_types_tool: user %s in domain %s sees %d types", profile_id, domain_scope, len(items))
     return serialise({"count": len(items), "items": items})
 

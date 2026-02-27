@@ -17,6 +17,7 @@ def create_stigmergic_edge(
     target_id: str,
     edge_type: str,
     rationale_summary: str,
+    profile_id: str,
     created_by_prompt_hash: str = "SYSTEM_GENERATED",
     domain_scope: str = "Global",
 ) -> str:
@@ -30,8 +31,9 @@ def create_stigmergic_edge(
         target_id: UUID of the target ObjectNode.
         edge_type: Relationship type label (e.g. "RELATES_TO", "POPULATES").
         rationale_summary: Human-readable explanation of the link (max 200 chars).
+        profile_id: ID of the user/profile creating this edge (Rule 5.3).
         created_by_prompt_hash: Hash of the originating prompt. Defaults to "SYSTEM_GENERATED".
-        domain_scope: Domain this edge belongs to.
+        domain_scope: Domain this edge belongs to (Rule 5.2).
 
     Returns:
         TOON JSON {"id": "<uuid>", "cs": 0.5} on success, or {"error": ...} on failure.
@@ -47,19 +49,26 @@ def create_stigmergic_edge(
         edge_type=edge_type,
         rationale_summary=rationale_summary,
         created_by_prompt_hash=created_by_prompt_hash,
+        created_by_profile_id=profile_id,
         domain_scope=domain_scope,
     )
+    logger.info("Tool create_stigmergic_edge: created by user %s in domain %s", profile_id, domain_scope)
     return serialise({"id": edge.id, "confidence_score": edge.confidence_score})
 
 
 @mcp.tool()
-def reinforce_stigmergic_edge(edge_id: str) -> str:
+def reinforce_stigmergic_edge(
+    edge_id: str,
+    profile_id: str,
+) -> str:
     """Reinforce a Stigmergic Edge after a successful traversal.
 
     Increases confidence_score by 0.1 (capped at 1.0) and updates last_accessed.
+    Rule 5.3: Attributes the reinforcement to the user's profile.
 
     Args:
         edge_id: UUID of the StigmergicEdge to reinforce.
+        profile_id: ID of the user/profile reinforcing this edge (Rule 5.3).
 
     Returns:
         TOON JSON {"id": ..., "cs": <new_confidence>} on success.
@@ -69,4 +78,5 @@ def reinforce_stigmergic_edge(edge_id: str) -> str:
         return serialise({"error": "NOT_FOUND", "message": f"Edge {edge_id} not found."})
 
     updated = reinforce_edge(edge_id)
+    logger.info("Tool reinforce_stigmergic_edge: reinforced by user %s to score %.2f", profile_id, updated.confidence_score)
     return serialise({"id": updated.id, "confidence_score": updated.confidence_score})

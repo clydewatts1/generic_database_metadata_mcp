@@ -63,6 +63,8 @@ class MetaType(BaseModel):
     schema_definition: dict[str, Any]
     health_score: float = Field(default=1.0, ge=0.0, le=1.0)
     version: int = Field(default=1)
+    domain_scope: str = Field(default="Global")  # Rule 5.2: MetaTypes can be domain-scoped
+    created_by_profile_id: str = Field(default="SYSTEM")  # Rule 5.1: Track originating user
 
 
 # ---------------------------------------------------------------------------
@@ -74,6 +76,7 @@ class ObjectNodeCreate(BaseModel):
 
     meta_type_id: str
     domain_scope: str = "Global"
+    profile_id: str = Field(default="SYSTEM")  # Rule 5.1: Track which user/profile created this
     properties: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -83,6 +86,7 @@ class ObjectNode(BaseModel):
     id: str = Field(default_factory=_new_uuid)
     meta_type_id: str
     domain_scope: str = "Global"
+    profile_id: str = Field(default="SYSTEM")  # Rule 5.1: Originating user/profile
     properties: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -98,6 +102,7 @@ class StigmergicEdgeCreate(BaseModel):
     edge_type: str
     rationale_summary: str = Field(..., max_length=200)
     created_by_prompt_hash: str = "SYSTEM_GENERATED"
+    created_by_profile_id: str = Field(default="SYSTEM")  # Rule 5.3: Attribute edge to user
     domain_scope: str = "Global"
 
 
@@ -112,6 +117,7 @@ class StigmergicEdge(BaseModel):
     last_accessed: datetime = Field(default_factory=_now_utc)
     rationale_summary: str = Field(default="", max_length=200)
     created_by_prompt_hash: str = "SYSTEM_GENERATED"
+    created_by_profile_id: str = Field(default="SYSTEM")  # Rule 5.3: Originating user
     domain_scope: str = "Global"
 
 
