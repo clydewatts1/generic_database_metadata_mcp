@@ -9,9 +9,9 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create project structure per implementation plan (src/mcp_server, src/graph, src/models, src/utils, tests)
-- [ ] T002 Initialize Python project with dependencies (mcp, falkordb, pydantic, freezegun)
-- [ ] T003 [P] Configure linting and formatting tools (ruff, mypy)
+- [x] T001 Create project structure per implementation plan (src/mcp_server, src/graph, src/models, src/utils, tests)
+- [x] T002 Initialize Python project with dependencies (mcp, falkordb, pydantic, freezegun)
+- [x] T003 [P] Configure linting and formatting tools (ruff, mypy)
 
 ---
 
@@ -19,11 +19,11 @@
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
-- [ ] T004 Setup FalkorDBLite connection manager in src/graph/connection.py
-- [ ] T005 [P] Implement TOON serialization utility in src/utils/toon.py
-- [ ] T006 [P] Setup FastMCP server instance in src/mcp_server/server.py
-- [ ] T007 Create base Pydantic models (MetaType, ObjectNode, StigmergicEdge) in src/models/base.py
-- [ ] T008 Configure error handling and logging infrastructure in src/utils/logging.py
+- [x] T004 Setup FalkorDBLite connection manager in src/graph/client.py
+- [x] T005 [P] Implement TOON serialization utility in src/models/serialization.py
+- [x] T006 [P] Setup FastMCP server instance in src/mcp_server/server.py
+- [x] T007 Create base Pydantic models (MetaType, ObjectNode, StigmergicEdge) in src/models/base.py
+- [x] T008 Configure error handling and logging infrastructure in src/utils/logging.py
 
 **Checkpoint**: Foundation ready - user story implementation can now begin.
 

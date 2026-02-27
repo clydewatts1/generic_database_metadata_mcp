@@ -1,0 +1,10 @@
+mcp
+pydantic
+falkordb
+freezegun
+
+# Dev / testing
+pytest
+pytest-asyncio
+ruff
+mypy
