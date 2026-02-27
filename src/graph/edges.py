@@ -1,14 +1,12 @@
 """Graph operations for Stigmergic Edges (create, reinforce, decay, prune)."""
 
-from __future__ import annotations
-
 import json
 from datetime import datetime, timezone
 from typing import Any
 
-from src.graph.client import execute_query
-from src.models.base import StigmergicEdge
-from src.utils.logging import NotFoundError, get_logger
+from .client import execute_query
+from ..models.base import StigmergicEdge
+from ..utils.logging import NotFoundError, get_logger
 
 logger = get_logger(__name__)
 
@@ -34,7 +32,7 @@ def _row_to_edge(row: list[Any]) -> StigmergicEdge:
         confidence_score=float(p["confidence_score"]),
         last_accessed=datetime.fromisoformat(p["last_accessed"]),
         rationale_summary=p.get("rationale_summary", ""),
-        created_by_prompt_hash=p.get("created_by_prompt_hash", "SYSTEM_GENERATED"),
+        created_by_profile_id=p.get("created_by_profile_id", "SYSTEM"),  # Rule 5.3
         domain_scope=p.get("domain_scope", "Global"),
     )
 
@@ -48,16 +46,19 @@ def create_edge(
     target_id: str,
     edge_type: str,
     rationale_summary: str,
-    created_by_prompt_hash: str = "SYSTEM_GENERATED",
+    created_by_profile_id: str = "SYSTEM",  # Rule 5.3
     domain_scope: str = "Global",
 ) -> StigmergicEdge:
-    """Create a Stigmergic Edge with initial confidence_score=0.5."""
+    """Create a Stigmergic Edge with initial confidence_score=0.5.
+
+    Rule 5.3: Stores created_by_profile_id for user attribution.
+    """
     edge = StigmergicEdge(
         source_id=source_id,
         target_id=target_id,
         edge_type=edge_type,
         rationale_summary=rationale_summary,
-        created_by_prompt_hash=created_by_prompt_hash,
+        created_by_profile_id=created_by_profile_id,  # Rule 5.3
         domain_scope=domain_scope,
     )
 
@@ -70,7 +71,7 @@ def create_edge(
         "  confidence_score: $confidence_score,"
         "  last_accessed: $last_accessed,"
         "  rationale_summary: $rationale_summary,"
-        "  created_by_prompt_hash: $created_by_prompt_hash,"
+        "  created_by_profile_id: $created_by_profile_id,"
         "  domain_scope: $domain_scope"
         "})",
         {
@@ -81,11 +82,11 @@ def create_edge(
             "confidence_score": edge.confidence_score,
             "last_accessed": edge.last_accessed.isoformat(),
             "rationale_summary": edge.rationale_summary,
-            "created_by_prompt_hash": edge.created_by_prompt_hash,
+            "created_by_profile_id": edge.created_by_profile_id,  # Rule 5.3
             "domain_scope": edge.domain_scope,
         },
     )
-    logger.debug("StigmergicEdge created: %s (%s -> %s)", edge.id, source_id, target_id)
+    logger.debug("StigmergicEdge created: %s (%s -> %s) by %s", edge.id, source_id, target_id, created_by_profile_id)
     return edge
 
 

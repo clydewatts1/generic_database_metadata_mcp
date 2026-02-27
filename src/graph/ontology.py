@@ -1,13 +1,11 @@
 """Graph operations for MetaType nodes (CRUD and health management)."""
 
-from __future__ import annotations
-
 import json
 from typing import Any
 
-from src.graph.client import execute_query
-from src.models.base import MetaType, MetaTypeCreate, TypeCategory
-from src.utils.logging import get_logger
+from .client import execute_query
+from ..models.base import MetaType, MetaTypeCreate, TypeCategory
+from ..utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -26,6 +24,8 @@ def _row_to_meta_type(row: list[Any]) -> MetaType:
         schema_definition=json.loads(props["schema_definition"]),
         health_score=float(props["health_score"]),
         version=int(props["version"]),
+        domain_scope=props.get("domain_scope", "Global"),  # Rule 5.2
+        created_by_profile_id=props.get("created_by_profile_id", "SYSTEM"),  # Rule 5.1
     )
 
 
@@ -33,8 +33,15 @@ def _row_to_meta_type(row: list[Any]) -> MetaType:
 # Create
 # ---------------------------------------------------------------------------
 
-def create_meta_type(data: MetaTypeCreate) -> MetaType:
+def create_meta_type(
+    data: MetaTypeCreate,
+    profile_id: str = "SYSTEM",
+    domain_scope: str = "Global",
+) -> MetaType:
     """Persist a new MetaType node and return the full MetaType.
+
+    Rule 5.1: Stores the profile_id of the creator.
+    Rule 5.2: Stores domain_scope to restrict visibility.
 
     Raises ValueError if a MetaType with the same name already exists.
     """
@@ -46,6 +53,8 @@ def create_meta_type(data: MetaTypeCreate) -> MetaType:
         name=data.name,
         type_category=data.type_category,
         schema_definition=data.schema_definition,
+        domain_scope=domain_scope,
+        created_by_profile_id=profile_id,
     )
 
     query = (
@@ -55,7 +64,9 @@ def create_meta_type(data: MetaTypeCreate) -> MetaType:
         "  type_category: $type_category,"
         "  schema_definition: $schema_definition,"
         "  health_score: $health_score,"
-        "  version: $version"
+        "  version: $version,"
+        "  domain_scope: $domain_scope,"
+        "  created_by_profile_id: $created_by_profile_id"
         "}) RETURN m"
     )
     params = {
@@ -65,9 +76,11 @@ def create_meta_type(data: MetaTypeCreate) -> MetaType:
         "schema_definition": json.dumps(mt.schema_definition),
         "health_score": mt.health_score,
         "version": mt.version,
+        "domain_scope": domain_scope,
+        "created_by_profile_id": profile_id,
     }
     execute_query(query, params)
-    logger.info("MetaType created: %s (%s)", mt.name, mt.id)
+    logger.info("MetaType created: %s (%s) by %s in domain %s", mt.name, mt.id, profile_id, domain_scope)
     return mt
 
 
@@ -99,9 +112,15 @@ def get_meta_type_by_id(meta_type_id: str) -> MetaType | None:
     return _row_to_meta_type(rows[0])
 
 
-def list_meta_types() -> list[MetaType]:
-    """Return all MetaType nodes in the graph."""
-    result = execute_query("MATCH (m:MetaType) RETURN m")
+def list_meta_types(domain_scope: str = "Global") -> list[MetaType]:
+    """Return MetaType nodes visible to *domain_scope* (includes Global).
+
+    Rule 5.2: Only returns MetaTypes in the user's domain_scope or Global scope.
+    """
+    result = execute_query(
+        "MATCH (m:MetaType) WHERE m.domain_scope IN [$domain_scope, 'Global'] RETURN m",
+        {"domain_scope": domain_scope},
+    )
     return [_row_to_meta_type(row) for row in result.result_set]
 
 

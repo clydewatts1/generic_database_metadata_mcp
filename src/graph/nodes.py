@@ -1,16 +1,14 @@
 """Graph operations for Object Nodes (CRUD and bulk ingest)."""
 
-from __future__ import annotations
-
 import json
 from typing import Any
 
 from pydantic import ValidationError as PydanticValidationError
 
-from src.graph.client import execute_query
-from src.models.base import MetaType, ObjectNode, ObjectNodeCreate
-from src.models.dynamic import validate_properties
-from src.utils.logging import ValidationError, get_logger
+from .client import execute_query
+from ..models.base import MetaType, ObjectNode, ObjectNodeCreate
+from ..models.dynamic import validate_properties
+from ..utils.logging import ValidationError, get_logger
 
 logger = get_logger(__name__)
 
@@ -26,6 +24,7 @@ def _row_to_object_node(row: list[Any]) -> ObjectNode:
         id=props["id"],
         meta_type_id=props["meta_type_id"],
         domain_scope=props.get("domain_scope", "Global"),
+        profile_id=props.get("profile_id", "SYSTEM"),  # Rule 5.1
         properties=json.loads(props.get("properties", "{}")),
     )
 
@@ -48,6 +47,7 @@ def create_node(meta_type: MetaType, data: ObjectNodeCreate) -> ObjectNode:
     node = ObjectNode(
         meta_type_id=meta_type.id,
         domain_scope=data.domain_scope,
+        profile_id=data.profile_id,  # Rule 5.1
         properties=clean_props,
     )
 
@@ -56,12 +56,14 @@ def create_node(meta_type: MetaType, data: ObjectNodeCreate) -> ObjectNode:
         "  id: $id,"
         "  meta_type_id: $meta_type_id,"
         "  domain_scope: $domain_scope,"
+        "  profile_id: $profile_id,"
         "  properties: $properties"
         "})",
         {
             "id": node.id,
             "meta_type_id": node.meta_type_id,
             "domain_scope": node.domain_scope,
+            "profile_id": node.profile_id,  # Rule 5.1
             "properties": json.dumps(node.properties),
         },
     )

@@ -18,7 +18,6 @@ def create_stigmergic_edge(
     edge_type: str,
     rationale_summary: str,
     profile_id: str,
-    created_by_prompt_hash: str = "SYSTEM_GENERATED",
     domain_scope: str = "Global",
 ) -> str:
     """Create a stigmergic (confidence-weighted) link between two Object Nodes.
@@ -32,7 +31,6 @@ def create_stigmergic_edge(
         edge_type: Relationship type label (e.g. "RELATES_TO", "POPULATES").
         rationale_summary: Human-readable explanation of the link (max 200 chars).
         profile_id: ID of the user/profile creating this edge (Rule 5.3).
-        created_by_prompt_hash: Hash of the originating prompt. Defaults to "SYSTEM_GENERATED".
         domain_scope: Domain this edge belongs to (Rule 5.2).
 
     Returns:
@@ -48,7 +46,6 @@ def create_stigmergic_edge(
         target_id=target_id,
         edge_type=edge_type,
         rationale_summary=rationale_summary,
-        created_by_prompt_hash=created_by_prompt_hash,
         created_by_profile_id=profile_id,
         domain_scope=domain_scope,
     )

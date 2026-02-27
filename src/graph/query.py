@@ -8,13 +8,12 @@
 
 All results are returned as compact TOON-serialised dicts.
 """
-from __future__ import annotations
 
 from typing import Any
 
-from src.graph.client import get_graph
-from src.models.serialization import serialise
-from src.utils.logging import get_logger
+from .client import get_graph
+from ..models.serialization import serialise
+from ..utils.logging import get_logger
 
 logger = get_logger(__name__)
 
