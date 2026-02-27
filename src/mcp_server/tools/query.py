@@ -3,7 +3,7 @@
 Reinforces every edge traversed so that well-used paths accumulate confidence,
 embodying the stigmergic «use it or lose it» principle.
 """
-from __future__ import annotations
+from typing import Any, Dict
 
 from ..app import mcp
 from ...graph.query import query_graph as _query_graph
@@ -20,7 +20,7 @@ def query_graph(
     hops: int = 1,
     page: int = 0,
     page_size: int = 5,
-) -> dict:
+) -> Dict:
     """Retrieve ObjectNode records with optional bounded graph traversal.
 
     Filters nodes by *meta_type_name* and/or *domain_scope* (which always

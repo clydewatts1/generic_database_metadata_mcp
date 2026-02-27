@@ -1,8 +1,6 @@
 """MCP tool: register_meta_type – dynamically register a new Object or Edge type."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, Dict
 
 from pydantic import ValidationError as PydanticValidationError
 
@@ -19,7 +17,7 @@ logger = get_logger(__name__)
 def register_meta_type(
     name: str,
     type_category: str,
-    schema_definition: dict[str, Any],
+    schema_definition: Dict[str, Any],
 ) -> str:
     """Register a new MetaType (Object Type or Edge Type) in the graph.
 

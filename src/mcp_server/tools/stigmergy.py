@@ -1,6 +1,6 @@
 """MCP tool: create_stigmergic_edge – create and reinforce confidence-weighted links."""
 
-from __future__ import annotations
+from typing import Dict
 
 from ..app import mcp
 from ...models.serialization import serialise

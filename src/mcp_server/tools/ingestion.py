@@ -1,8 +1,6 @@
 """MCP tools: insert_node and bulk_ingest_seed – context-frugal node ingestion."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, Dict, List
 
 from ..app import mcp
 from ...models.base import ObjectNodeCreate
@@ -14,7 +12,7 @@ from ...utils.logging import ValidationError, CircuitBreakerError, NotFoundError
 logger = get_logger(__name__)
 
 # In-memory session circuit-breaker state: meta_type_id -> consecutive failure count
-_failure_counts: dict[str, int] = {}
+_failure_counts: Dict[str, int] = {}
 _CIRCUIT_BREAKER_THRESHOLD = 3
 
 
@@ -34,7 +32,7 @@ def _reset_failure_count(meta_type_id: str) -> None:
 @mcp.tool()
 def insert_node(
     meta_type_name: str,
-    properties: dict[str, Any],
+    properties: Dict[str, Any],
     domain_scope: str = "Global",
 ) -> str:
     """Insert a single Object Node of the given MetaType.
@@ -76,7 +74,7 @@ def insert_node(
 @mcp.tool()
 def bulk_ingest_seed(
     meta_type_name: str,
-    records: list[dict[str, Any]],
+    records: List[Dict[str, Any]],
     domain_scope: str = "Global",
 ) -> str:
     """Bulk-ingest initial seed data for a MetaType without overwhelming AI context.
