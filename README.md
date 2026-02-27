@@ -122,8 +122,8 @@ In the Inspector UI, configure an SSE connection to `http://127.0.0.1:8000` and 
 
 ## MCP Tools
 
-| Tool | User Story | Description |
-|------|-----------|-------------|
+| Tool | Rule | Description |
+|------|------|-------------|
 | `register_meta_type` | US1 | Define a new typed schema (PascalCase name, JSON Schema definition) |
 | `list_meta_types_tool` | US1 | List all registered MetaTypes (TOON paginated) |
 | `insert_node` | US2 | Insert a single ObjectNode; validated against its MetaType schema |
@@ -131,6 +131,12 @@ In the Inspector UI, configure an SSE connection to `http://127.0.0.1:8000` and 
 | `create_stigmergic_edge` | US3 | Create a directed edge between two ObjectNodes (`confidence_score=0.5`) |
 | `reinforce_stigmergic_edge` | US3 | Reinforce an edge (+0.1, capped at 1.0) |
 | `query_graph` | US4 | Query nodes with optional traversal, domain filter, pagination |
+| `suggest_schema_heals` | Rule 2.7 | Identify MetaTypes with low health scores and suggest healing |
+| `confirm_schema_heal` | Rule 2.7 | Reset a MetaType's health score to 1.0 after schema healing |
+| `deprecate_node` | Rule 4.5 | Deprecate a node and trigger cascading wither (prune attached edges) |
+| `branch_node_for_domain` | Rule 5.4 | Create a domain-specific copy of a node (Parallel Truths) |
+| `request_node_deletion` | Rule 5.5 | Request deletion with approval flow (Supreme Court) |
+| `confirm_node_deletion` | Rule 5.5 | Confirm node deletion after approval |
 
 ### Example: register a MetaType
 
@@ -162,7 +168,60 @@ In the Inspector UI, configure an SSE connection to `http://127.0.0.1:8000` and 
 }
 ```
 
+### Example: suggest schema heals (Rule 2.7)
+
+```json
+{
+  "tool": "suggest_schema_heals",
+  "arguments": {
+    "profile_id": "user_alice",
+    "domain_scope": "Finance"
+  }
+}
+```
+
+### Example: deprecate a node (Rule 4.5)
+
+```json
+{
+  "tool": "deprecate_node",
+  "arguments": {
+    "node_id": "node_uuid",
+    "profile_id": "user_alice",
+    "reason": "Node is no longer used in this domain"
+  }
+}
+```
+
+### Example: branch node for domain (Rule 5.4 - Parallel Truths)
+
+```json
+{
+  "tool": "branch_node_for_domain",
+  "arguments": {
+    "source_node_id": "node_uuid",
+    "target_domain_scope": "Finance",
+    "profile_id": "user_alice",
+    "domain_scope": "Global"
+  }
+}
+```
+
 ---
+
+## Specification Rules Coverage
+
+| Component | Rules | Status |
+|-----------|-------|--------|
+| **Dynamic Meta-Ontology** | 2.1-2.8 | ✅ Complete |
+| **Stigmergic Execution** | 4.1-4.5 | ✅ Complete |
+| **Profile-Aware Scoping** | 5.1-5.5 | ✅ Complete |
+| **Testing & Validation** | 6.1-6.3 | ✅ Complete |
+| **Context Frugality** | 3.1-3.5 | ✅ Complete |
+
+All 26 specification rules have been implemented and tested.
+
+````
 
 ## TOON Serialisation
 
