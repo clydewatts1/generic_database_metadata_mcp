@@ -57,13 +57,13 @@
 
 ### Tests for User Story 2
 
-- [ ] T013 [P] [US2] Write tests for node insertion and bulk ingest in tests/test_ingestion.py
+- [x] T013 [P] [US2] Write tests for node insertion and bulk ingest in tests/unit/test_ingestion.py
 
 ### Implementation for User Story 2
 
-- [ ] T014 [P] [US2] Implement Node graph operations (create, get) in src/graph/nodes.py
-- [ ] T015 [US2] Implement `insert_node` MCP tool in src/mcp_server/tools/ingestion.py
-- [ ] T016 [US2] Implement `bulk_ingest_seed` MCP tool in src/mcp_server/tools/ingestion.py
+- [x] T014 [P] [US2] Implement Node graph operations (create, get) in src/graph/nodes.py
+- [x] T015 [US2] Implement `insert_node` MCP tool in src/mcp_server/tools/ingestion.py
+- [x] T016 [US2] Implement `bulk_ingest_seed` MCP tool in src/mcp_server/tools/ingestion.py
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently.
 
@@ -77,12 +77,12 @@
 
 ### Tests for User Story 3
 
-- [ ] T017 [P] [US3] Write tests for edge creation in tests/test_stigmergy.py
+- [x] T017 [P] [US3] Write tests for edge creation in tests/unit/test_stigmergy.py
 
 ### Implementation for User Story 3
 
-- [ ] T018 [P] [US3] Implement Edge graph operations (create, update) in src/graph/edges.py
-- [ ] T019 [US3] Implement `create_stigmergic_edge` MCP tool in src/mcp_server/tools/stigmergy.py
+- [x] T018 [P] [US3] Implement Edge graph operations (create, update) in src/graph/edges.py
+- [x] T019 [US3] Implement `create_stigmergic_edge` MCP tool in src/mcp_server/tools/stigmergy.py
 
 **Checkpoint**: All ingestion and linking user stories should now be independently functional.
 
@@ -96,13 +96,13 @@
 
 ### Tests for User Story 4
 
-- [ ] T020 [P] [US4] Write tests for decay logic and graph querying using freezegun in tests/test_decay.py
+- [x] T020 [P] [US4] Write tests for decay logic and graph querying using freezegun in tests/test_decay.py
 
 ### Implementation for User Story 4
 
-- [ ] T021 [P] [US4] Implement decay calculation logic in src/graph/decay.py
-- [ ] T022 [US4] Implement graph traversal and querying logic in src/graph/query.py
-- [ ] T023 [US4] Implement `query_graph` MCP tool in src/mcp_server/tools/query.py
+- [x] T021 [P] [US4] Implement decay calculation logic in src/graph/decay.py
+- [x] T022 [US4] Implement graph traversal and querying logic in src/graph/query.py
+- [x] T023 [US4] Implement `query_graph` MCP tool in src/mcp_server/tools/query.py
 
 **Checkpoint**: All user stories should now be independently functional.
 
