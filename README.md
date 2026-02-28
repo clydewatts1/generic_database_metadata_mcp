@@ -116,7 +116,7 @@ Once the server is running, connect via the MCP Inspector:
 npx @modelcontextprotocol/inspector
 ```
 
-In the Inspector UI, configure an SSE connection to `http://127.0.0.1:8000` and start testing the 7 MCP tools.
+In the Inspector UI, configure an SSE connection to `http://127.0.0.1:8000` and start testing the 17 MCP tools.
 
 ---
 
@@ -137,6 +137,9 @@ In the Inspector UI, configure an SSE connection to `http://127.0.0.1:8000` and 
 | `branch_node_for_domain` | Rule 5.4 | Create a domain-specific copy of a node (Parallel Truths) |
 | `request_node_deletion` | Rule 5.5 | Request deletion with approval flow (Supreme Court) |
 | `confirm_node_deletion` | Rule 5.5 | Confirm node deletion after approval |
+| `create_function` | Function Objects | Register an ETL operation or transformation with input/output schemas |
+| `query_functions` | Function Objects | Query registered Function Objects by name or description |
+| `attach_function_to_nodes` | Function Objects | Link a Function Object to ObjectNodes for transformation lineage |
 
 ### Example: register a MetaType
 

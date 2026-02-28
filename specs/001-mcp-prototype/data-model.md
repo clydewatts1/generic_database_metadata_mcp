@@ -65,9 +65,9 @@ Represents an ETL operation or logic transformation.
 ### Stigmergic Edge Lifecycle
 1. **Creation**: `confidence_score` = 0.5, `last_accessed` = NOW().
 2. **Reinforcement**: On traversal, `confidence_score` += 0.1 (max 1.0), `last_accessed` = NOW().
-3. **Decay**: Periodically, if `NOW() - last_accessed > threshold` (where `threshold` = 24 hours), `confidence_score` -= `decay_rate` (where `decay_rate` = 0.05 per day).
-4. **Pruning**: If `confidence_score < 0.1`, delete edge.
-5. **Cascading Wither**: If attached node is deprecated, `confidence_score` = 0.0 (immediate pruning).
+3. **Decay**: Periodically (decay pass), check each edge: if `NOW() - last_accessed > 7 days` (threshold), `confidence_score` -= 0.02 per 24h elapsed.
+4. **Pruning**: If `confidence_score < 0.1`, delete edge automatically.
+5. **Cascading Wither**: If attached node is deprecated, apply immediate 0.0 penalty (instant pruning).
 
 ### MetaType Health Lifecycle
 1. **Creation**: `health_score` = 1.0.

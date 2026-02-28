@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 def _register_tools() -> None:
     """Import tool modules so their @mcp.tool decorators fire."""
     # Imported for side-effects (decorator registration)
-    from .tools import ontology, ingestion, stigmergy, query, healing, lifecycle  # noqa: F401
+    from .tools import ontology, ingestion, stigmergy, query, healing, lifecycle, functions  # noqa: F401
     logger.info("All MCP tools registered.")
 
 

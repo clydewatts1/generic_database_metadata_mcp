@@ -48,10 +48,40 @@
 **Input**:
 - `query_intent` (String): Natural language or simplified query intent.
 - `domain_scope` (String): User's domain scope.
-- `max_depth` (Integer, default=2): Maximum traversal depth.
+- `max_depth` (Integer, default=2): Maximum traversal depth (1-2 hops).
 - `page` (Integer, default=1): Pagination page number.
 **Output**:
 - `results` (String): TOON-serialized, paginated results.
 - `total_pages` (Integer): Total number of pages available.
 - `current_page` (Integer): Current page number.
-- `nodes_returned` (Integer): Number of nodes in this payload (max 5).
+- `nodes_returned` (Integer): Number of nodes in this payload (max 5 per page).
+
+## 6. `create_function`
+**Purpose**: Register a Function Object representing an ETL operation or transformation.
+**Input**:
+- `name` (String): Name of the function.
+- `logic_description` (String): Natural language description of the transformation (max 500 chars).
+- `input_schema` (Dict): Expected input structure (JSON Schema).
+- `output_schema` (Dict): Expected output structure (JSON Schema).
+**Output**:
+- `function_id` (UUID): ID of the created Function Object.
+- `status` (String): "SUCCESS" or "VALIDATION_ERROR".
+
+## 7. `query_functions`
+**Purpose**: Query registered Function Objects.
+**Input**:
+- `filter` (String, optional): Search by name or description.
+- `domain_scope` (String): User's domain scope.
+**Output**:
+- `functions` (String): TOON-serialized list of matching Function Objects (paginated if > 5).
+- `total_count` (Integer): Total Function Objects matching filter.
+
+## 8. `attach_function_to_nodes`
+**Purpose**: Link a Function Object to one or more ObjectNodes (transformation lineage).
+**Input**:
+- `function_id` (UUID): ID of the Function Object.
+- `target_node_ids` (Array[UUID]): ObjectNode IDs to attach the function to.
+- `relationship_type` (String): Type of relationship (e.g., "TRANSFORMS", "DEPENDS_ON").
+**Output**:
+- `attachments_created` (Integer): Number of relationships created.
+- `status` (String): "SUCCESS" or "PARTIAL_SUCCESS".
