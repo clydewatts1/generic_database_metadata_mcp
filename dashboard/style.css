@@ -1,0 +1,213 @@
+/* ============================================================
+   Metadata Graph Dashboard — style.css
+   ============================================================ */
+
+/* ----- Reset & base ----- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ----- Header ----- */
+#app-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    background: #1a1f2e;
+    border-bottom: 1px solid #2d3348;
+    flex-shrink: 0;
+}
+#app-header h1 { font-size: 1.1rem; font-weight: 600; }
+#scope-badge {
+    font-size: 0.75rem;
+    background: #2d3348;
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: #94a3b8;
+}
+#refresh-btn {
+    margin-left: auto;
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 12px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+#refresh-btn:hover { background: #2563eb; }
+
+/* ----- Banners ----- */
+.banner {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+.banner--error { background: #7f1d1d; color: #fca5a5; }
+.banner--warn  { background: #78350f; color: #fcd34d; }
+.banner--info  { background: #1e3a5f; color: #93c5fd; }
+#login-banner  { background: #1a1f2e; border-bottom: 1px solid #2d3348; display: flex; gap: 0.5rem; align-items: center; }
+#jwt-input { flex: 1; padding: 4px 8px; background: #0f1117; color: #e2e8f0; border: 1px solid #2d3348; border-radius: 4px; font-family: monospace; font-size: 0.8rem; }
+#jwt-submit-btn { background: #22c55e; color: #000; border: none; border-radius: 4px; padding: 4px 12px; cursor: pointer; font-size: 0.85rem; }
+
+/* ----- Main layout ----- */
+#main-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ----- Filter panel ----- */
+#filter-panel {
+    width: 200px;
+    flex-shrink: 0;
+    background: #1a1f2e;
+    border-right: 1px solid #2d3348;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+}
+#filter-panel h2 { font-size: 0.8rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+#type-filter {
+    background: #0f1117;
+    color: #e2e8f0;
+    border: 1px solid #2d3348;
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 0.82rem;
+    width: 100%;
+}
+#type-filter option { padding: 2px 4px; }
+#clear-filter-btn {
+    background: transparent;
+    color: #94a3b8;
+    border: 1px solid #2d3348;
+    border-radius: 4px;
+    padding: 3px 8px;
+    cursor: pointer;
+    font-size: 0.78rem;
+}
+#clear-filter-btn:hover { border-color: #3b82f6; color: #3b82f6; }
+#search-input {
+    width: 100%;
+    padding: 4px 8px;
+    background: #0f1117;
+    color: #e2e8f0;
+    border: 1px solid #2d3348;
+    border-radius: 4px;
+    font-size: 0.82rem;
+}
+#match-count { font-size: 0.75rem; color: #94a3b8; }
+#empty-state { font-size: 0.8rem; color: #f87171; margin-top: 0.25rem; }
+
+/* ----- Cy container ----- */
+#cy-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+#cy { width: 100%; height: 100%; }
+#loading-spinner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15,17,23,0.7);
+    font-size: 1rem;
+    color: #94a3b8;
+}
+#empty-state-global {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: #94a3b8;
+}
+
+/* ----- Detail panel ----- */
+#detail-panel {
+    width: 280px;
+    flex-shrink: 0;
+    background: #1a1f2e;
+    border-left: 1px solid #2d3348;
+    padding: 0.75rem;
+    overflow-y: auto;
+    position: relative;
+    /* slide-in animation */
+    transition: transform 0.2s ease;
+}
+#detail-panel.hidden { transform: translateX(100%); display: none; }
+#detail-close-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+#detail-title { font-size: 0.95rem; margin-bottom: 0.5rem; margin-right: 1.5rem; }
+#detail-props { font-size: 0.8rem; display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; }
+#detail-props dt { color: #94a3b8; font-weight: 500; padding: 1px 0; white-space: nowrap; }
+#detail-props dd { color: #e2e8f0; word-break: break-word; }
+
+/* ----- Dimmed nodes (1-hop highlight) ----- */
+.cy-node-dimmed { opacity: 0.15 !important; }
+/* via Cytoscape classes — styles applied in app.js style array */
+
+/* ----- Legend ----- */
+#legend {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background: rgba(26,31,46,0.92);
+    border: 1px solid #2d3348;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    z-index: 10;
+    pointer-events: none;
+}
+#legend h3 { font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.35rem; }
+.legend-row { display: flex; align-items: center; gap: 0.5rem; margin: 2px 0; }
+.legend-edge {
+    display: inline-block;
+    height: 3px;
+    width: 32px;
+    border-radius: 2px;
+}
+.stigmergic-strong { background: linear-gradient(to right, #6366f1, #8b5cf6); height: 5px; }
+.stigmergic-weak   { background: #6366f1; height: 1px; border-top: 1px dashed #6366f1; opacity: 0.5; }
+.structural        { background: #475569; height: 1.5px; }
+
+/* ----- Edge tooltip ----- */
+#edge-tooltip {
+    position: fixed;
+    background: #1a1f2e;
+    border: 1px solid #2d3348;
+    border-radius: 6px;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.78rem;
+    pointer-events: none;
+    z-index: 999;
+    max-width: 260px;
+    line-height: 1.5;
+}
+#edge-tooltip strong { color: #94a3b8; }
+
+/* ----- Utility ----- */
+.hidden { display: none !important; }
