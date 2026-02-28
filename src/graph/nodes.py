@@ -1,6 +1,7 @@
 """Graph operations for Object Nodes (CRUD and bulk ingest)."""
 
 import json
+import uuid
 from typing import Any
 
 from pydantic import ValidationError as PydanticValidationError
@@ -93,6 +94,19 @@ def list_nodes_by_type(meta_type_id: str, limit: int = 100) -> list[ObjectNode]:
 
 
 # ---------------------------------------------------------------------------
+# Delete
+# ---------------------------------------------------------------------------
+
+def delete_node(node_id: str) -> None:
+    """Remove an ObjectNode from the graph. Caller should cascade-wither edges first."""
+    execute_query(
+        "MATCH (n:ObjectNode {id: $id}) DETACH DELETE n",
+        {"id": node_id},
+    )
+    logger.warning("ObjectNode deleted: %s", node_id)
+
+
+# ---------------------------------------------------------------------------
 # Bulk ingest
 # ---------------------------------------------------------------------------
 
@@ -100,6 +114,7 @@ def bulk_ingest(
     meta_type: MetaType,
     property_list: list[dict[str, Any]],
     domain_scope: str = "Global",
+    profile_id: str = "SYSTEM",
 ) -> dict[str, Any]:
     """Insert many nodes without returning full node data (context-frugal).
 
@@ -116,6 +131,7 @@ def bulk_ingest(
                 ObjectNodeCreate(
                     meta_type_id=meta_type.id,
                     domain_scope=domain_scope,
+                    profile_id=profile_id,
                     properties=props,
                 ),
             )
@@ -134,3 +150,71 @@ def bulk_ingest(
     if errors:
         summary["sample_errors"] = errors
     return summary
+
+
+# ---------------------------------------------------------------------------
+# Parallel Truths – [:VARIANTS] branching (T030 / Rule 5.3)
+# ---------------------------------------------------------------------------
+
+def branch_node_as_variant(
+    original_node_id: str,
+    domain_scope: str,
+    profile_id: str,
+) -> str:
+    """Create a domain-specific variant of an existing ObjectNode linked via [:VARIANTS].
+
+    The new node is a shallow structural copy of the original with its own UUID,
+    a new ``domain_scope``, and a ``[:VARIANTS]`` relationship back to the original.
+
+    Rule 5.3 – Parallel Truths polysemy:  domain-specific meanings coexist without
+    overwriting the global concept.
+
+    Parameters
+    ----------
+    original_node_id:
+        ID of the umbrella / global ObjectNode to branch from.
+    domain_scope:
+        Domain scope for the new variant node.
+    profile_id:
+        User or agent creating the variant (audit trail).
+
+    Returns
+    -------
+    The ``id`` of the newly created variant node (UUID string).
+    """
+    variant_id = str(uuid.uuid4())
+
+    # 1. Copy the original node into the new domain scope
+    execute_query(
+        "MATCH (orig:ObjectNode {id: $orig_id}) "
+        "CREATE (v:ObjectNode { "
+        "  id: $variant_id, "
+        "  meta_type_id: orig.meta_type_id, "
+        "  meta_type_name: orig.meta_type_name, "
+        "  domain_scope: $domain_scope, "
+        "  profile_id: $profile_id, "
+        "  properties: orig.properties "
+        "})",
+        {
+            "orig_id": original_node_id,
+            "variant_id": variant_id,
+            "domain_scope": domain_scope,
+            "profile_id": profile_id,
+        },
+    )
+
+    # 2. Link variant back to the original with [:VARIANTS]
+    execute_query(
+        "MATCH (orig:ObjectNode {id: $orig_id}), (v:ObjectNode {id: $variant_id}) "
+        "CREATE (v)-[:VARIANTS]->(orig)",
+        {
+            "orig_id": original_node_id,
+            "variant_id": variant_id,
+        },
+    )
+
+    logger.info(
+        "Variant node created: %s -> %s (scope=%s, profile=%s)",
+        original_node_id, variant_id, domain_scope, profile_id,
+    )
+    return variant_id

@@ -1,30 +1,29 @@
-"""MCP tools: bulk_ingest_seed – context-frugal node bulk ingestion (US1)."""
+with open("src/mcp_server/tools/ingestion.py", "r", encoding="utf-8") as f:
+    orig = f.read()
 
-from typing import Any, Dict, List
+import re
 
-from ..app import mcp
-from ...models.base import ObjectNodeCreate
-from ...models.serialization import serialise
-from ...graph.ontology import get_meta_type_by_id, get_meta_type_by_name, decrement_health_score
-from ...graph.nodes import create_node, bulk_ingest
-from ...utils.logging import ValidationError, CircuitBreakerError, NotFoundError, get_logger
-import yaml
-import os
+# We will just replace the bulk_ingest_seed function
+orig = orig.replace('from ...utils.logging import ValidationError, CircuitBreakerError, NotFoundError, get_logger', 'from ...utils.logging import ValidationError, CircuitBreakerError, NotFoundError, get_logger\nimport yaml\nimport os')
 
-logger = get_logger(__name__)
+func_re = re.compile(r"@mcp\.tool\(\)\ndef bulk_ingest_seed\(.*?return serialise\(summary\)", re.DOTALL)
 
-
-@mcp.tool()
-def bulk_ingest_seed(file_path: str) -> str:
-    """Bulk-ingest initial seed data from a YAML file without overwhelming AI context.
+new_func = \"\"\"@mcp.tool()
+def bulk_ingest_seed(
+    file_path: str,
+) -> str:
+    \"\"\"Bulk-ingest initial seed data from a YAML file without overwhelming AI context.
     
     Returns ONLY a compact summary.
-    """
+    
+    Args:
+        file_path: Absolute path to the YAML bulk specification file.
+    \"\"\"
     if not os.path.exists(file_path):
         return serialise({"success": False, "nodes_created": 0, "edges_created": 0, "message": f"File not found: {file_path}"})
         
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             data = yaml.safe_load(f)
     except Exception as e:
         return serialise({"success": False, "nodes_created": 0, "edges_created": 0, "message": f"YAML parse error: {e}"})
@@ -40,7 +39,7 @@ def bulk_ingest_seed(file_path: str) -> str:
             continue
         mt = get_meta_type_by_name(meta_type_name)
         if mt is None:
-            logger.warning(f"MetaType {meta_type_name} not found for bulk ingest.")
+            logger.warning("MetaType %s not found for bulk ingest.", meta_type_name)
             continue
         summary = bulk_ingest(mt, records, domain_scope="Global", profile_id="SYSTEM")
         nodes_created += summary.get("inserted", 0)
@@ -50,4 +49,9 @@ def bulk_ingest_seed(file_path: str) -> str:
         "nodes_created": nodes_created,
         "edges_created": edges_created,
         "message": f"Ingested {nodes_created} nodes and {edges_created} edges."
-    })
+    })\"\"\"
+
+orig = func_re.sub(new_func, orig)
+
+with open("src/mcp_server/tools/ingestion.py", "w", encoding="utf-8") as f:
+    f.write(orig)

@@ -4,22 +4,29 @@ from __future__ import annotations
 
 import logging
 import sys
+import structlog
 
 
-def get_logger(name: str) -> logging.Logger:
-    """Return a named logger with a consistent format."""
-    logger = logging.getLogger(name)
-    if not logger.handlers:
-        handler = logging.StreamHandler(sys.stderr)
-        handler.setFormatter(
-            logging.Formatter(
-                fmt="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-                datefmt="%Y-%m-%dT%H:%M:%S",
-            )
-        )
-        logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
-    return logger
+def configure_logging():
+    """Configure structlog to output JSON."""
+    structlog.configure(
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.add_logger_name,
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.JSONRenderer(),
+        ],
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
+
+
+def get_logger(name: str) -> structlog.BoundLogger:
+    """Return a structlog logger."""
+    return structlog.get_logger(name)
 
 
 class AppError(Exception):

@@ -29,7 +29,10 @@ def _now_utc() -> datetime:
 class TypeCategory(str, Enum):
     NODE = "NODE"
     EDGE = "EDGE"
-
+class RelationshipClass(str, Enum):
+    STRUCTURAL = "STRUCTURAL"
+    FLOW = "FLOW"
+    NONE = "NONE"
 
 # ---------------------------------------------------------------------------
 # MetaType
@@ -44,6 +47,10 @@ class MetaTypeCreate(BaseModel):
         ...,
         description="JSON Schema dict defining the fields, types, and required status.",
     )
+    relationship_class: RelationshipClass = RelationshipClass.NONE
+    created_by_prompt_hash: str = "SYSTEM_GENERATED"
+    relationship_class: RelationshipClass = RelationshipClass.NONE
+    created_by_prompt_hash: str = "SYSTEM_GENERATED"
 
     @field_validator("name")
     @classmethod
@@ -63,6 +70,10 @@ class MetaType(BaseModel):
     schema_definition: dict[str, Any]
     health_score: float = Field(default=1.0, ge=0.0, le=1.0)
     version: int = Field(default=1)
+    relationship_class: RelationshipClass = RelationshipClass.NONE
+    created_at: datetime = Field(default_factory=_now_utc)
+    created_by_prompt_hash: str = "SYSTEM_GENERATED"
+    rationale_summary: str = ""
     domain_scope: str = Field(default="Global")  # Rule 5.2: MetaTypes can be domain-scoped
     created_by_profile_id: str = Field(default="SYSTEM")  # Rule 5.1: Track originating user
 
@@ -136,7 +147,8 @@ class FunctionObjectCreate(BaseModel):
     output_schema: dict[str, Any] = Field(
         ..., description="JSON Schema for expected output structure"
     )
-    profile_id: str = Field(default="SYSTEM")  # Rule 5.1: Creator's profile
+    profile_id: str = Field(default="SYSTEM")
+    created_by_prompt_hash: str = "SYSTEM_GENERATED"  # Rule 5.1: Creator's profile
 
     @field_validator("name")
     @classmethod
@@ -171,4 +183,5 @@ class FunctionObject(BaseModel):
     created_by_profile_id: str = Field(default="SYSTEM")  # Rule 5.1: Track originating user
     domain_scope: str = Field(default="Global")  # Rule 5.2: Domain this function applies to
     created_at: datetime = Field(default_factory=_now_utc)  # Creation timestamp
+    created_by_prompt_hash: str = "SYSTEM_GENERATED"
     version: int = Field(default=1)  # Schema version for compatibility tracking

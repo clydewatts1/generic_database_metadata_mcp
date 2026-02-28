@@ -11,9 +11,9 @@ description: "Task list for Stigmergic MCP Metadata Server Prototype implementat
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create project structure (`src/`, `tests/`) per implementation plan
-- [ ] T002 Initialize Python environment with `mcp`, `falkordb`, `pydantic`, `pyyaml`, `structlog`, and `freezegun` dependencies
-- [ ] T003 [P] Setup structured JSON logging (`structlog`) for observability in `src/mcp_server/server.py`
+- [x] T001 Create project structure (`src/`, `tests/`) per implementation plan
+- [x] T002 Initialize Python environment with `mcp`, `falkordb`, `pydantic`, `pyyaml`, `structlog`, and `freezegun` dependencies
+- [x] T003 [P] Setup structured JSON logging (`structlog`) for observability in `src/mcp_server/server.py`
 
 ---
 
@@ -21,10 +21,10 @@ description: "Task list for Stigmergic MCP Metadata Server Prototype implementat
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
-- [ ] T004 Create core Pydantic base models (`MetaType`, `ObjectNode`, `StigmergicEdge`, `FunctionObject`) in `src/models/base.py`
-- [ ] T005 [P] Setup `FalkorDB` client connection lifecycle and singleton in `src/graph/client.py`
-- [ ] T006 Initialize FastMCP server instance and basic routing in `src/mcp_server/server.py`
-- [ ] T007 Configure ephemeral in-memory graph fixtures for test isolation using `pytest` in `tests/conftest.py`
+- [x] T004 Create core Pydantic base models (`MetaType`, `ObjectNode`, `StigmergicEdge`, `FunctionObject`) in `src/models/base.py`
+- [x] T005 [P] Setup `FalkorDB` client connection lifecycle and singleton in `src/graph/client.py`
+- [x] T006 Initialize FastMCP server instance and basic routing in `src/mcp_server/server.py`
+- [x] T007 Configure ephemeral in-memory graph fixtures for test isolation using `pytest` in `tests/conftest.py`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -38,13 +38,13 @@ description: "Task list for Stigmergic MCP Metadata Server Prototype implementat
 
 ### Tests for User Story 1
 
-- [ ] T008 [P] [US1] Integration test for YAML seed ingest missing context bloat in `tests/integration/test_ingest.py`
+- [x] T008 [P] [US1] Integration test for YAML seed ingest missing context bloat in `tests/integration/test_ingest.py`
 
 ### Implementation for User Story 1
 
-- [ ] T009 [P] [US1] Create core graph bulk insert functions in `src/graph/queries.py`
-- [ ] T010 [P] [US1] Build YAML parser and logic for `bulk_ingest_seed` tool in `src/mcp_server/tools/ingest.py`
-- [ ] T011 [US1] Register `bulk_ingest_seed` tool with the main FastMCP server in `src/mcp_server/server.py`
+- [x] T009 [P] [US1] Create core graph bulk insert functions in `src/graph/queries.py`
+- [x] T010 [P] [US1] Build YAML parser and logic for `bulk_ingest_seed` tool in `src/mcp_server/tools/ingest.py`
+- [x] T011 [US1] Register `bulk_ingest_seed` tool with the main FastMCP server in `src/mcp_server/server.py`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -58,15 +58,15 @@ description: "Task list for Stigmergic MCP Metadata Server Prototype implementat
 
 ### Tests for User Story 2
 
-- [ ] T012 [P] [US2] Contract and unit test for Pydantic dynamic model generation in `tests/unit/test_schema.py`
+- [x] T012 [P] [US2] Contract and unit test for Pydantic dynamic model generation in `tests/unit/test_schema.py`
 
 ### Implementation for User Story 2
 
-- [ ] T013 [P] [US2] Implement dynamic Pydantic definitions `create_model` in `src/graph/schema.py`
-- [ ] T014 [US2] Implement pre-insertion validation and `health_score` tracking in `src/graph/schema.py`
-- [ ] T015 [US2] Build `register_meta_type` and `insert_node` tools in `src/mcp_server/tools/ontology.py`
-- [ ] T016 [US2] Build Circuit Breaker (locking execution after 3 failed tries) and `confirm_schema_heal` tool in `src/mcp_server/tools/ontology.py`
-- [ ] T017 [US2] Register ontology tools in `src/mcp_server/server.py`
+- [x] T013 [P] [US2] Implement dynamic Pydantic definitions `create_model` in `src/graph/schema.py`
+- [x] T014 [US2] Implement pre-insertion validation and `health_score` tracking in `src/graph/schema.py`
+- [x] T015 [US2] Build `register_meta_type`, `patch_meta_type`, and `insert_node` tools in `src/mcp_server/tools/ontology.py`
+- [x] T016 [US2] Build Circuit Breaker (locking execution after 3 failed tries) and `confirm_schema_heal` tool in `src/mcp_server/tools/ontology.py`
+- [x] T017 [US2] Register ontology tools in `src/mcp_server/server.py`
 
 ---
 
@@ -78,14 +78,14 @@ description: "Task list for Stigmergic MCP Metadata Server Prototype implementat
 
 ### Tests for User Story 3
 
-- [ ] T018 [P] [US3] Unit test frugality bounds (TOON serialization and Pagination) in `tests/unit/test_serialization.py`
+- [x] T018 [P] [US3] Unit test frugality bounds (TOON serialization and Pagination) in `tests/unit/test_serialization.py`
 
 ### Implementation for User Story 3
 
-- [ ] T019 [P] [US3] Implement TOON output serialization format in `src/mcp_server/formatters/toon.py`
-- [ ] T020 [US3] Implement depth-bounded (1-2 hop max) Cypher read queries with pagination in `src/graph/queries.py`
-- [ ] T021 [US3] Build `query_graph` tool applying TOON and pagination in `src/mcp_server/tools/query.py`
-- [ ] T022 [US3] Register query tool in `src/mcp_server/server.py`
+- [x] T019 [P] [US3] Implement TOON output serialization format in `src/mcp_server/formatters/toon.py`
+- [x] T020 [US3] Implement depth-bounded (1-2 hop max) Cypher read queries with pagination in `src/graph/queries.py`
+- [x] T021 [US3] Build `query_graph` tool applying TOON and pagination in `src/mcp_server/tools/query.py`
+- [x] T022 [US3] Register query tool in `src/mcp_server/server.py`
 
 ---
 
@@ -97,14 +97,14 @@ description: "Task list for Stigmergic MCP Metadata Server Prototype implementat
 
 ### Tests for User Story 4
 
-- [ ] T023 [P] [US4] Write time-mocked freezegun tests for decay and cascading wither in `tests/unit/test_stigmergy.py`
+- [x] T023 [P] [US4] Write time-mocked freezegun tests for decay and cascading wither in `tests/unit/test_stigmergy.py`
 
 ### Implementation for User Story 4
 
-- [ ] T024 [P] [US4] Build `create_stigmergic_edge` tool capturing prompt_hash and rationale in `src/mcp_server/tools/stigmergy.py`
-- [ ] T025 [US4] Implement pheromone reinforcement logic on successful query execution inside `src/graph/queries.py`
-- [ ] T026 [US4] Build biological decay/pruning routine and "Cascading Wither" for detached edges in `src/graph/client.py`
-- [ ] T027 [US4] Register stigmergy tool in `src/mcp_server/server.py`
+- [x] T024 [P] [US4] Build `create_stigmergic_edge` tool capturing prompt_hash and rationale in `src/mcp_server/tools/stigmergy.py`
+- [x] T025 [US4] Implement pheromone reinforcement logic on successful query execution inside `src/graph/queries.py`
+- [x] T026 [US4] Build biological decay/pruning routine and "Cascading Wither" for detached edges in `src/graph/client.py`
+- [x] T027 [US4] Register stigmergy tool in `src/mcp_server/server.py`
 
 ---
 
@@ -116,13 +116,13 @@ description: "Task list for Stigmergic MCP Metadata Server Prototype implementat
 
 ### Tests for User Story 5
 
-- [ ] T028 [P] [US5] Unit test domain scoping, Parallel Truths, and approval interception in `tests/unit/test_scoping.py`
+- [x] T028 [P] [US5] Unit test domain scoping, Parallel Truths, and approval interception in `tests/unit/test_scoping.py`
 
 ### Implementation for User Story 5
 
-- [ ] T029 [P] [US5] Inject Profile Context into all `graph/queries.py` execution
-- [ ] T030 [US5] Add `[:VARIANTS]` logic in `src/graph/schema.py` for parallel truths branching
-- [ ] T031 [US5] Enforce `[APPROVAL_REQUIRED]` response format on structural teardowns in `src/mcp_server/tools/ontology.py`
+- [x] T029 [P] [US5] Inject Profile Context into all `graph/queries.py` execution
+- [x] T030 [US5] Add `[:VARIANTS]` logic in `src/graph/schema.py` for parallel truths branching
+- [x] T031 [US5] Build `delete_node` and `delete_meta_type` tools enforcing `[APPROVAL_REQUIRED]` response format on structural teardowns in `src/mcp_server/tools/ontology.py`
 
 ---
 
@@ -134,13 +134,13 @@ description: "Task list for Stigmergic MCP Metadata Server Prototype implementat
 
 ### Tests for User Story 6
 
-- [ ] T032 [P] [US6] Integration test for comprehensive Function Objects workflow in `tests/integration/test_function_objects_e2e.py`
+- [x] T032 [P] [US6] Integration test for comprehensive Function Objects workflow in `tests/integration/test_function_objects_e2e.py`
 
 ### Implementation for User Story 6
 
-- [ ] T033 [US6] Implement CRUD mechanics for Functions in `src/graph/queries.py`
-- [ ] T034 [US6] Build tool endpoints `create_function`, `query_functions`, and `attach_function_to_nodes` in `src/mcp_server/tools/functions.py`
-- [ ] T035 [US6] Register tools inside the FastMCP wrapper in `src/mcp_server/server.py`
+- [x] T033 [US6] Implement CRUD mechanics for Functions in `src/graph/queries.py`
+- [x] T034 [US6] Build tool endpoints `create_function`, `query_functions`, and `attach_function_to_nodes` in `src/mcp_server/tools/functions.py`
+- [x] T035 [US6] Register tools inside the FastMCP wrapper in `src/mcp_server/server.py`
 
 ---
 
@@ -148,9 +148,9 @@ description: "Task list for Stigmergic MCP Metadata Server Prototype implementat
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T036 Code cleanup and strict type-hint alignment
-- [ ] T037 Perform FastMCP end-to-end validation of the SSE server mapping via the `.quickstart.md` invocations
-- [ ] T038 Review all payload assertions to absolutely confirm no uncompressed `JSON` leaks
+- [x] T036 Code cleanup and strict type-hint alignment
+- [x] T037 Perform FastMCP end-to-end validation of the SSE server mapping via the `.quickstart.md` invocations
+- [x] T038 Review all payload assertions to absolutely confirm no uncompressed `JSON` leaks
 
 ---
 

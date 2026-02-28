@@ -48,27 +48,3 @@ def suggest_schema_heals(
         domain_scope,
     )
     return serialise({"count": len(unhealthy), "suggestions": unhealthy})
-
-
-@mcp.tool()
-def confirm_schema_heal(
-    meta_type_id: str,
-    profile_id: str,
-) -> str:
-    """Confirm that a schema has been healed (Rule 2.7).
-
-    Resets the health_score of a MetaType to 1.0 after the AI has patched/evolved it.
-
-    Args:
-        meta_type_id: ID of the MetaType that was healed.
-        profile_id: ID of the user/profile confirming the heal (Rule 5.1).
-
-    Returns:
-        TOON JSON {"status": "healed"} on success.
-    """
-    try:
-        reset_health_score(meta_type_id)
-        logger.info("Tool confirm_schema_heal: reset health for %s by user %s", meta_type_id, profile_id)
-        return serialise({"status": "healed", "meta_type_id": meta_type_id})
-    except Exception as exc:
-        return serialise({"error": "HEAL_FAILED", "message": str(exc)})

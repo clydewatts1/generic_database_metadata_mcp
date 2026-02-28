@@ -1,3 +1,35 @@
+<!--
+SYNC IMPACT REPORT
+==================
+Version change:    1.0.0 → 1.1.0
+Bump rationale:    MINOR — new Rule 3.6 (Human Viewport Exception) added to Section 3.
+                   New rule adds materially expanded guidance; no prior rule redefined or removed.
+
+Modified principles:
+  - None renamed or altered.
+
+Added:
+  - Rule 3.6 — Human Viewport Exception (Section 3)
+  - Governance section (was absent in v1.0.0; added to satisfy template)
+  - Version / Ratification / Last Amended footer
+
+Removed:
+  - Nothing removed.
+
+Templates requiring updates:
+  ✅ .specify/templates/plan-template.md   — Constitution Check gates already reference rules by
+                                             number; Rule 3.6 is a permissive exception, not a
+                                             constraint gate, so no gate change required.
+  ✅ .specify/templates/spec-template.md   — No mandatory section or constraint change required.
+  ✅ .specify/templates/tasks-template.md  — No new principle-driven task type introduced.
+
+Follow-up TODOs:
+  - TODO(RATIFICATION_DATE): Set to 2026-02-28 (first session date). Confirm against
+    git history and update if an earlier adoption date exists.
+  - When a visual dashboard feature is planned, its spec Constitution Check MUST
+    explicitly cite Rule 3.6 (exemption) and Rule 5.2 (scoping enforcement).
+-->
+
 # **Project Constitution: Stigmergic MCP Metadata Server**
 
 ## **1\. Core Identity & Architecture**
@@ -26,6 +58,7 @@ The FalkorDBLite schema operates on a dynamic meta-model, strictly enforced by a
 * **Rule 3.3 \- Pagination:** If a Cypher query returns more than 5 connected nodes, the MCP tool must paginate the results or use an LLM-summarization step before returning the string to the client.  
 * **Rule 3.4 \- The Genesis Seed (Cold Start):** For Day-0 ingestion, the MCP server must provide a dedicated bulk\_ingest\_seed tool that bypasses the LLM's context window. The AI is only permitted to pass a file path (e.g., a CSV of Teradata schema dumps) to this tool, allowing the Python server to silently build the initial un-weighted graph in the background without flooding the context.  
 * **Rule 3.5 \- Compact Output Serialization (TOON/Compact Protocol):** To strictly minimize token consumption, the MCP server must not return verbose, unoptimized JSON arrays for multi-node responses. It must utilize a token-efficient serialization format (such as Token-Oriented Object Notation \- TOON) that strips redundant keys, uses minimal delimiters, and reduces syntactic noise before passing the payload back to the LLM.
+* **Rule 3.6 \- Human Viewport Exception:** To allow human visualization of the graph, a dedicated visual web dashboard MAY be built alongside the MCP tools. The API serving this web dashboard is safely exempt from Rule 3.2 (Semantic Compression) and Rule 3.5 (Compact Serialization) because it serves a human web browser, not an LLM. However, it MUST strictly enforce Rule 5.2 (Scoped Visibility) before rendering any graph data to the user.
 
 ## **4\. The Stigmergic Execution Mandate (Confidence-Weighted Web)**
 
@@ -48,3 +81,13 @@ The FalkorDBLite schema operates on a dynamic meta-model, strictly enforced by a
 * **Rule 6.1 \- Test-Driven Stigmergy:** All stigmergic mechanics (e.g., Biological Decay, Schema Health, Cascading Wither) must have dedicated unit tests. The AI must write tests that explicitly mock time progression (e.g., using freezegun) to prove that confidence scores decay and dead links are pruned as expected.  
 * **Rule 6.2 \- Frugality Assertion:** Every read-focused MCP tool must include tests that assert the maximum payload size or node count. Tests must explicitly fail if a query returns raw, uncompressed topologies or exceeds the pagination threshold.  
 * **Rule 6.3 \- Ephemeral Sandbox:** All tests must be completely isolated using ephemeral, in-memory instances of FalkorDBLite. The AI is strictly prohibited from writing tests that rely on or mutate an external, persistent graph state.
+
+## **7\. Governance**
+
+* This constitution supersedes all other conventions or practices for this project.
+* Amendments MUST increment the version following semantic versioning (MAJOR: incompatible governance/principle removal or redefinition; MINOR: new principle or materially expanded guidance; PATCH: clarification, wording, or typo fix).
+* All implementation plans MUST include a Constitution Check section citing the rules that gate the feature.
+* Compliance review is expected at each `/speckit.plan` invocation; violations must be justified in the Complexity Tracking table of the plan.
+* The Sync Impact Report (HTML comment at file top) MUST be updated on every amendment.
+
+**Version**: 1.1.0 | **Ratified**: 2026-02-28 | **Last Amended**: 2026-02-28
