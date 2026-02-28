@@ -1,33 +1,55 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change:    1.0.0 → 1.1.0
-Bump rationale:    MINOR — new Rule 3.6 (Human Viewport Exception) added to Section 3.
-                   New rule adds materially expanded guidance; no prior rule redefined or removed.
+Version change:    1.1.0 → 1.2.0
+Bump rationale:    MINOR — new Rule 5.7 (Audit Logging for Human Viewport) added to Section 5.
+                   New rule adds materially expanded, non-negotiable compliance guidance for
+                   human-originated actions via the Visual Web Dashboard; no prior rule was
+                   redefined or removed.
 
 Modified principles:
   - None renamed or altered.
 
 Added:
-  - Rule 3.6 — Human Viewport Exception (Section 3)
-  - Governance section (was absent in v1.0.0; added to satisfy template)
-  - Version / Ratification / Last Amended footer
+  - Rule 5.7 — Audit Logging for Human Viewport (Section 5)
 
 Removed:
   - Nothing removed.
 
+Gap note:
+  - Rule 5.6 is not yet defined. The numbering 5.7 is intentional per author request.
+    Rule 5.6 is treated as RESERVED for a future amendment.
+
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md   — Constitution Check gates already reference rules by
-                                             number; Rule 3.6 is a permissive exception, not a
-                                             constraint gate, so no gate change required.
-  ✅ .specify/templates/spec-template.md   — No mandatory section or constraint change required.
-  ✅ .specify/templates/tasks-template.md  — No new principle-driven task type introduced.
+  ✅ .specify/templates/plan-template.md   — Constitution Check gates reference rules by number;
+                                             Rule 5.7 introduces an audit-logging obligation for
+                                             any dashboard feature plan. Future plan Constitution
+                                             Check sections MUST cite Rule 5.7 when the feature
+                                             involves the Visual Web Dashboard.
+  ✅ .specify/templates/spec-template.md   — No mandatory section or structural constraint added;
+                                             existing FR/SC slots are sufficient to capture 5.7
+                                             obligations at spec time.
+  ✅ .specify/templates/tasks-template.md  — Rule 5.7 introduces a new principle-driven task
+                                             category: "Audit Logging" tasks. Future tasks.md
+                                             files for dashboard features MUST include audit-log
+                                             write, query, and atomicity tasks.
+  ⚠ README.md                              — "Specification Rules Coverage" table row for
+                                             "Profile-Aware Scoping" currently reads "5.1–5.5".
+                                             MUST be updated to "5.1–5.5, 5.7 (5.6 reserved)"
+                                             and status changed to "⚠ Partial" until Rule 5.7
+                                             is implemented in src/dashboard/.
 
 Follow-up TODOs:
-  - TODO(RATIFICATION_DATE): Set to 2026-02-28 (first session date). Confirm against
-    git history and update if an earlier adoption date exists.
-  - When a visual dashboard feature is planned, its spec Constitution Check MUST
-    explicitly cite Rule 3.6 (exemption) and Rule 5.2 (scoping enforcement).
+  - TODO(RULE_5_6): Rule 5.6 slot is reserved. Define or formally mark it as permanently skipped
+    in the next constitution amendment.
+  - TODO(RULE_5_7_IMPL): Rule 5.7 is constitutionally ratified but not yet implemented.
+    A feature spec + implementation task for audit logging in src/dashboard/ is required.
+    The spec Constitution Check MUST cite Rules 5.7, 5.2, and 3.6.
+
+Prior report (v1.0.0 → v1.1.0) preserved below for historical reference:
+  Version change:    1.0.0 → 1.1.0
+  Added:             Rule 3.6 (Human Viewport Exception, Section 3), Governance section, version footer.
+  Removed:           Nothing.
 -->
 
 # **Project Constitution: Stigmergic MCP Metadata Server**
@@ -75,6 +97,8 @@ The FalkorDBLite schema operates on a dynamic meta-model, strictly enforced by a
 * **Rule 5.3 \- Bound Stigmergy:** When a user's action triggers a pheromone reinforcement (Rule 4.2) or edge creation (Rule 4.1), the system must attribute that stigmergic trace to the user's profile, ensuring cross-domain contamination is minimized.  
 * **Rule 5.4 \- Parallel Truths (Polysemy):** If the AI detects conflicting stigmergic connections with high confidence from different domain scopes (e.g., Finance vs. Marketing), it must branch the Business Term into domain-specific nodes (e.g., Active User (Finance)) rather than overwriting or deleting conflicting definitions, allowing parallel truths to co-exist securely.  
 * **Rule 5.5 \- The Supreme Court (Escalation):** While the AI can freely create and weave, any attempt to delete an Object Type, drop a MetaType definition, or destructively modify a 'Global' scoped node requires an explicit \[APPROVAL\_REQUIRED\] payload to be sent to the client, acting as a human-in-the-loop Supreme Court for irreversible structural changes.
+* **Rule 5.6 \- RESERVED:** This rule number is reserved for a future amendment.
+* **Rule 5.7 \- Audit Logging for Human Viewport:** Any action — read or mutation — performed by a human user through the Visual Web Dashboard MUST generate an explicit, structured audit log entry that is distinct from the AI Immutable Provenance trail (Rule 4.4). Each audit entry MUST capture all of the following attributes: `profile_id` of the acting user, `domain_scope` active at the time of the action, action type (`READ` or `MUTATION`), identifier(s) of every affected node or edge, a UTC ISO-8601 timestamp, and a `human_session_id` (e.g. session token or client IP where a session identifier is not available). Dashboard-originated audit entries MUST NOT carry a `created_by_prompt_hash` attribute — that field is reserved exclusively for AI-generated stigmergic actions (Rule 4.4) and its presence in a human audit record is a compliance violation. The dashboard API layer MUST write the audit record atomically with the action it describes; if the audit record cannot be persisted, the action MUST be rejected with an appropriate HTTP error response. Audit records MUST be queryable and retained for the full operational lifetime of the Stigmergic Graph Engine to support governance review.
 
 ## **6\. The Testing & Validation Mandate**
 
@@ -90,4 +114,4 @@ The FalkorDBLite schema operates on a dynamic meta-model, strictly enforced by a
 * Compliance review is expected at each `/speckit.plan` invocation; violations must be justified in the Complexity Tracking table of the plan.
 * The Sync Impact Report (HTML comment at file top) MUST be updated on every amendment.
 
-**Version**: 1.1.0 | **Ratified**: 2026-02-28 | **Last Amended**: 2026-02-28
+**Version**: 1.2.0 | **Ratified**: 2026-02-28 | **Last Amended**: 2026-02-28

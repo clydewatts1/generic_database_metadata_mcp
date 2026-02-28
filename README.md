@@ -274,9 +274,10 @@ Configure an SSE connection to `http://127.0.0.1:8000`.
 | **Human Viewport Exception** | 3.6 | ✅ Complete — dashboard API exempt from TOON/compression |
 | **Stigmergic Execution** | 4.1–4.5 | ✅ Complete |
 | **Profile-Aware Scoping** | 5.1–5.5 | ✅ Complete |
+| **Audit Logging (Human Viewport)** | 5.7 | ⚠️ Ratified — implementation pending (5.6 reserved) |
 | **Testing & Validation** | 6.1–6.3 | ✅ Complete |
 
-All 26 MCP specification rules implemented and tested. Dashboard adds Rule 3.6 (Human Viewport Exception).
+26 rules implemented and tested; Rule 5.7 (Audit Logging for Human Viewport) constitutionally ratified in v1.2.0 — implementation task required. Rule 5.6 is reserved.
 
 ---
 
