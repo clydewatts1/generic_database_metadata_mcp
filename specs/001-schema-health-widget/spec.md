@@ -14,9 +14,12 @@
 | Rule 3.6 | Human Viewport Exception — dashboard API is exempt from Rules 3.2 & 3.5 | ✅ Applies — widget serves full JSON to browser |
 | Rule 4.4 | AI stigmergic actions carry `rationale_summary` and `created_by_prompt_hash` | Widget performs no AI actions; human audit path (Rule 5.7) applies instead |
 | Rule 5.2 | Scoped visibility — only nodes within `domain_scope` returned | ✅ Enforced server-side on every widget query |
+| Rule 5.6 | Dashboard Unified Security Layer — all dashboard routes MUST gate on JWT validation, scope injection, and audit write-through | ✅ Enforced at `health_router = APIRouter(dependencies=[Depends(unified_security)])` level — USL applied per R-003 |
 | Rule 5.7 | Every human read via the dashboard generates an explicit audit log entry | ✅ Must be implemented; each widget data load writes an audit record |
 
-> **Note on "Rule 4.6"**: The request references Rule 4.6 (read-only compliance). Rule 4.6 is not currently defined in the constitution (rules run to 4.5). The read-only constraint is already structurally enforced by the dashboard architecture under Rule 3.6 — the dashboard API has no write routes and no Cypher mutation paths. This spec treats "Rule 4.6 compliance" as meaning: the widget MUST NOT expose any endpoint that can alter MetaType state, and this is enforced server-side with no workarounds possible.
+> **Note on "Rule 4.6"**: Rule 4.6 is **RESERVED** in constitution v1.3.0 (gap-hold placeholder). No compliance obligation applies to this feature. The read-only constraint is structurally enforced under Rule 3.6 — no write routes or Cypher mutation paths exist.
+
+> **Constitution Note — Rule 5.6 / existing `GET /api/graph` route**: Constitution v1.3.0 added Rule 5.6 (Dashboard Unified Security Layer) after the `GET /api/graph` route was already implemented in feature `001-visual-graph-dashboard`. That route is **not** currently protected by the USL. Retroactive USL application to `/api/graph` is deferred to a follow-up feature `002-usl-migration` and does not block this feature's constitution compliance.
 
 ## User Scenarios & Testing *(mandatory)*
 

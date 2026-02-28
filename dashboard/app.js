@@ -619,3 +619,146 @@ function showSpinner(visible) {
     else el.classList.add('hidden');
 }
 
+
+/* ===========================================================
+   Schema Health Widget — 001-schema-health-widget
+   T012: fetchHealthData + basic render
+   T015: colour indicator (health_band CSS class)
+   T018: Refresh button with loading state
+   T021: Degraded banner on 503
+   T024: Truncation notice (data.truncated)
+   =========================================================== */
+
+/**
+ * Fetch health data from GET /api/health/meta-types and render the panel.
+ * Called on DOMContentLoaded (if authenticated) and on Refresh button click.
+ *
+ * The Cytoscape.js graph canvas (#cy) is never cleared or re-mounted here.
+ */
+async function fetchHealthData() {
+    const token = getStoredToken();
+    if (!token) return; // not authenticated — health panel stays hidden
+
+    const refreshBtn = document.getElementById('health-refresh-btn');
+    const loadingEl  = document.getElementById('health-loading');
+    const tableEl    = document.getElementById('health-table');
+    const tbodyEl    = document.getElementById('health-tbody');
+    const emptyEl    = document.getElementById('health-empty-state');
+    const degradedEl = document.getElementById('health-degraded-banner');
+    const truncatedEl = document.getElementById('health-truncated-notice');
+    const capEl      = document.getElementById('health-cap');
+    const totalEl    = document.getElementById('health-total');
+
+    // Disable refresh button and show loading state
+    if (refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = 'Refreshing…';
+    }
+    if (loadingEl)  loadingEl.classList.remove('hidden');
+    if (tableEl)    tableEl.classList.add('hidden');
+    if (emptyEl)    emptyEl.classList.add('hidden');
+    if (degradedEl) degradedEl.classList.add('hidden');
+    if (truncatedEl) truncatedEl.classList.add('hidden');
+
+    try {
+        const response = await fetch('/api/health/meta-types', {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+            // 503 degraded state (T021)
+            _showHealthDegraded(degradedEl, tableEl, tbodyEl);
+            return;
+        }
+
+        const data = await response.json();
+        if (loadingEl) loadingEl.classList.add('hidden');
+
+        // Render table rows (T012, T015)
+        if (tbodyEl) {
+            tbodyEl.innerHTML = '';
+            data.items.forEach(item => {
+                const tr = document.createElement('tr');
+
+                // Colour indicator cell (T015)
+                const indicatorTd = document.createElement('td');
+                const span = document.createElement('span');
+                span.className = `health-indicator ${item.health_band}`;
+                const tooltipText = item.health_score === 0
+                    ? 'Schema critically degraded'
+                    : `Score: ${item.health_score}`;
+                span.title = tooltipText;
+                indicatorTd.appendChild(span);
+                tr.appendChild(indicatorTd);
+
+                // Name cell
+                const nameTd = document.createElement('td');
+                nameTd.textContent = item.name;
+                tr.appendChild(nameTd);
+
+                // Type category cell
+                const typeTd = document.createElement('td');
+                typeTd.textContent = item.type_category;
+                tr.appendChild(typeTd);
+
+                // Score cell
+                const scoreTd = document.createElement('td');
+                scoreTd.textContent = item.health_score.toFixed(2);
+                tr.appendChild(scoreTd);
+
+                tbodyEl.appendChild(tr);
+            });
+        }
+
+        // Toggle empty state / table (T012)
+        if (data.items.length === 0) {
+            if (emptyEl)  emptyEl.classList.remove('hidden');
+            if (tableEl)  tableEl.classList.add('hidden');
+        } else {
+            if (tableEl)  tableEl.classList.remove('hidden');
+            if (emptyEl)  emptyEl.classList.add('hidden');
+        }
+
+        // Truncation notice (T024)
+        if (data.truncated && truncatedEl && capEl && totalEl) {
+            capEl.textContent   = data.items.length;
+            totalEl.textContent = data.total_available;
+            truncatedEl.classList.remove('hidden');
+        } else if (truncatedEl) {
+            truncatedEl.classList.add('hidden');
+        }
+
+    } catch (_err) {
+        // Network error / JS exception → show degraded state (T021)
+        if (loadingEl) loadingEl.classList.add('hidden');
+        _showHealthDegraded(degradedEl, tableEl, tbodyEl);
+    } finally {
+        // Restore refresh button (T018)
+        if (refreshBtn) {
+            refreshBtn.disabled = false;
+            refreshBtn.textContent = '\u21bb Refresh';
+        }
+    }
+}
+
+/** Show degraded banner, hide table — used on 503 or network error. */
+function _showHealthDegraded(degradedEl, tableEl, tbodyEl) {
+    if (degradedEl) degradedEl.classList.remove('hidden');
+    if (tableEl)    tableEl.classList.add('hidden');
+    if (tbodyEl)    tbodyEl.innerHTML = '';
+}
+
+/* ---- Wire up health widget on DOMContentLoaded ---- */
+document.addEventListener('DOMContentLoaded', () => {
+    // Initial health data load after graph data is available
+    const token = getStoredToken();
+    if (token) {
+        fetchHealthData();
+    }
+
+    // Refresh button (T018)
+    const refreshBtn = document.getElementById('health-refresh-btn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', fetchHealthData);
+    }
+});

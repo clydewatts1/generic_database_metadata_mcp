@@ -101,3 +101,43 @@ class DashboardUser(BaseModel):
 
     profile_id: str
     domain_scope: str
+
+
+# ---------------------------------------------------------------------------
+# MetaTypeHealthResponse — 001-schema-health-widget (T002)
+# ---------------------------------------------------------------------------
+
+_VALID_BANDS = {"green", "amber", "red"}
+
+
+class MetaTypeHealthResponse(BaseModel):
+    """Health summary for a single MetaType node returned by GET /api/health/meta-types."""
+
+    id: str
+    name: str
+    type_category: str
+    health_score: float = Field(..., ge=0.0, le=1.0)
+    health_band: str  # "green" | "amber" | "red"
+    domain_scope: str
+
+    @field_validator("health_score")
+    @classmethod
+    def clamp_health_score(cls, v: float) -> float:
+        """Clamp health_score to [0.0, 1.0]."""
+        return max(0.0, min(1.0, v))
+
+    @field_validator("health_band")
+    @classmethod
+    def validate_health_band(cls, v: str) -> str:
+        if v not in _VALID_BANDS:
+            raise ValueError(f"health_band must be one of {_VALID_BANDS}, got {v!r}")
+        return v
+
+
+class HealthPayloadResponse(BaseModel):
+    """Top-level response envelope for GET /api/health/meta-types."""
+
+    items: list[MetaTypeHealthResponse]
+    total_available: int
+    truncated: bool
+    audit_status: str = "ok"  # "ok" | "failed"

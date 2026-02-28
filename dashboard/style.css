@@ -211,3 +211,117 @@ body {
 
 /* ----- Utility ----- */
 .hidden { display: none !important; }
+
+/* ============================================================
+   Schema Health Widget — 001-schema-health-widget (T014)
+   ============================================================ */
+
+/* Panel container — positioned bottom-left of the viewport */
+#health-panel {
+    position: fixed;
+    bottom: 1rem;
+    left: 220px;
+    width: 380px;
+    max-width: calc(100vw - 240px);
+    background: rgba(26, 31, 46, 0.96);
+    border: 1px solid #2d3348;
+    border-radius: 8px;
+    padding: 0.65rem 0.75rem;
+    z-index: 20;
+    font-size: 0.82rem;
+    overflow-y: auto;
+    max-height: 40vh;
+}
+
+/* Panel header row */
+#health-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+}
+#health-panel-header h2 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Refresh button */
+#health-refresh-btn {
+    background: transparent;
+    color: #94a3b8;
+    border: 1px solid #2d3348;
+    border-radius: 4px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+#health-refresh-btn:hover:not(:disabled) {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+#health-refresh-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Degraded state banner */
+.degraded-banner {
+    background: #78350f;
+    color: #fcd34d;
+    border-radius: 4px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.78rem;
+    margin-bottom: 0.4rem;
+}
+
+/* Loading + empty state */
+#health-loading,
+#health-empty-state {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    padding: 0.25rem 0;
+}
+
+/* Health table */
+#health-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+#health-table th {
+    color: #64748b;
+    font-weight: 500;
+    text-align: left;
+    padding: 2px 6px;
+    border-bottom: 1px solid #2d3348;
+}
+#health-table td {
+    padding: 3px 6px;
+    color: #e2e8f0;
+    border-bottom: 1px solid #1a1f2e;
+}
+#health-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Colour indicator dot */
+.health-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+.health-green  { background-color: #28a745; }
+.health-amber  { background-color: #ffc107; }
+.health-red    { background-color: #dc3545; }
+
+/* Truncation notice */
+#health-truncated-notice {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    margin-top: 0.3rem;
+}
