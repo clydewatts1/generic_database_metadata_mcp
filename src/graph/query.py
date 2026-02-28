@@ -7,6 +7,7 @@
 - Optional 1-hop or 2-hop traversal from a seed node ID
 
 All results are returned as compact TOON-serialised dicts.
+Pheromone reinforcement is applied to traversed edges (T025).
 """
 
 from typing import Any
@@ -29,6 +30,7 @@ def query_graph(
     hops: int = 1,
     page: int = 0,
     page_size: int = _DEFAULT_PAGE_SIZE,
+    profile_id: str | None = None,
 ) -> dict[str, Any]:
     """Query ObjectNode nodes with optional traversal and filters.
 
@@ -48,6 +50,9 @@ def query_graph(
         Zero-based page index.
     page_size:
         Items per page (default 5).
+    profile_id:
+        Requesting user/agent profile ID (Rule 5.1). Used for audit logging only;
+        does not alter query results.
 
     Returns
     -------
@@ -56,10 +61,15 @@ def query_graph(
     hops = max(1, min(hops, _MAX_HOPS))
     skip = page * page_size
 
+    if profile_id:
+        logger.debug("query_graph called by profile=%s scope=%s", profile_id, domain_scope)
+
     graph = get_graph()
 
     if seed_node_id:
-        items, total = _traversal_query(graph, seed_node_id, hops, meta_type_name, domain_scope)
+        items, total, traversed_edge_ids = _traversal_query(graph, seed_node_id, hops, meta_type_name, domain_scope)
+        # T025: Pheromone reinforcement on traversed edges (stigmergic «use it or lose it»)
+        _reinforce_edges(traversed_edge_ids)
     else:
         items, total = _flat_query(graph, meta_type_name, domain_scope)
 
@@ -122,8 +132,11 @@ def _traversal_query(
     hops: int,
     meta_type_name: str | None,
     domain_scope: str | None,
-) -> tuple[list[dict[str, Any]], int]:
-    """Return neighbours of seed_node up to *hops* edges away."""
+) -> tuple[list[dict[str, Any]], int, list[str]]:
+    """Return neighbours of seed_node up to *hops* edges away.
+
+    Also returns a list of traversed StigmergicEdge IDs for pheromone reinforcement.
+    """
     where, params = _build_where_clause(meta_type_name, domain_scope, alias="n")
     params["seed"] = seed_node_id
     cypher = (
@@ -134,7 +147,35 @@ def _traversal_query(
     result = graph.query(cypher, params)
     rows = result.result_set
     items = [_node_to_dict(row[0]) for row in rows]
-    return items, len(items)
+
+    # Collect traversed StigmergicEdge IDs for reinforcement
+    edge_cypher = (
+        f"MATCH (seed:ObjectNode {{id: $seed}})-[*1..{hops}]-(n:ObjectNode) "
+        f"MATCH (e:StigmergicEdge) "
+        f"WHERE e.source_id = seed.id OR e.target_id = seed.id "
+        f"RETURN DISTINCT e.id"
+    )
+    edge_result = graph.query(edge_cypher, {"seed": seed_node_id})
+    edge_ids = [row[0] for row in edge_result.result_set if row]
+
+    return items, len(items), edge_ids
+
+
+def _reinforce_edges(edge_ids: list[str]) -> None:
+    """Apply pheromone reinforcement to traversed edges (T025)."""
+    if not edge_ids:
+        return
+    try:
+        from .edges import reinforce_edge
+        from ..utils.logging import NotFoundError
+        for edge_id in edge_ids:
+            try:
+                reinforce_edge(edge_id)
+            except NotFoundError:
+                pass  # Edge may have been pruned concurrently
+        logger.debug("Reinforced %d edges during traversal", len(edge_ids))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Edge reinforcement failed: %s", exc)
 
 
 def _node_to_dict(node: Any) -> dict[str, Any]:

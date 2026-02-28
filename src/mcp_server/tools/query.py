@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 
 from ..app import mcp
 from ...graph.query import query_graph as _query_graph
+from ...models.serialization import serialise
 from ...utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -53,6 +54,7 @@ def query_graph(
         hops=hops,
         page=page,
         page_size=page_size,
+        profile_id=profile_id,  # T029: Profile context injected for audit
     )
 
     logger.info(
@@ -66,4 +68,4 @@ def query_graph(
             "page": page,
         },
     )
-    return result
+    return serialise(result)

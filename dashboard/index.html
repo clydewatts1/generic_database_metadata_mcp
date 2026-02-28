@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metadata Graph Dashboard</title>
+    <!-- Cytoscape.js 3.x from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape@3/dist/cytoscape.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header id="app-header">
+        <h1>Metadata Graph</h1>
+        <div id="scope-badge"></div>
+        <button id="refresh-btn" title="Reload graph">&#x21bb; Refresh</button>
+    </header>
+
+    <!-- JWT login banner (shown when not authenticated) -->
+    <div id="login-banner" class="banner hidden">
+        <label for="jwt-input">Paste your JWT token to continue:</label>
+        <input id="jwt-input" type="text" placeholder="Bearer token (without 'Bearer ' prefix)">
+        <button id="jwt-submit-btn">Connect</button>
+    </div>
+
+    <!-- Error banners -->
+    <div id="scope-error-banner" class="banner banner--error hidden">
+        Your token does not carry the required <code>domain_scope</code> or <code>profile_id</code> claim.
+    </div>
+    <div id="error-banner" class="banner banner--warn hidden">
+        Graph engine unavailable — last view preserved.
+    </div>
+    <div id="truncated-banner" class="banner banner--info hidden">
+        Showing first 500 nodes — apply a filter to see more.
+    </div>
+
+    <!-- Main layout -->
+    <div id="main-layout">
+        <!-- Filter panel (left) -->
+        <aside id="filter-panel">
+            <h2>Object Type</h2>
+            <select id="type-filter" multiple size="8">
+                <!-- populated by app.js -->
+            </select>
+            <button id="clear-filter-btn">Clear filter</button>
+            <div id="empty-state" class="hidden">No nodes match the selected filter.</div>
+
+            <h2>Search</h2>
+            <input id="search-input" type="text" placeholder="Search business name…">
+            <span id="match-count" class="hidden"></span>
+        </aside>
+
+        <!-- Graph canvas -->
+        <div id="cy-container">
+            <div id="cy"></div>
+            <div id="loading-spinner" class="hidden">Loading…</div>
+            <div id="empty-state-global" class="hidden">No nodes in your permitted scope.</div>
+        </div>
+
+        <!-- Detail side panel (right) -->
+        <aside id="detail-panel" class="hidden">
+            <button id="detail-close-btn" title="Close">&times;</button>
+            <h2 id="detail-title">Node Detail</h2>
+            <dl id="detail-props"></dl>
+        </aside>
+    </div>
+
+    <!-- Edge tooltip (appended by app.js) -->
+
+    <!-- Legend -->
+    <div id="legend">
+        <h3>Legend</h3>
+        <div class="legend-row">
+            <span class="legend-edge stigmergic-strong"></span>
+            <span>Stigmergic edge (high confidence)</span>
+        </div>
+        <div class="legend-row">
+            <span class="legend-edge stigmergic-weak"></span>
+            <span>Stigmergic edge (low confidence, dashed)</span>
+        </div>
+        <div class="legend-row">
+            <span class="legend-edge structural"></span>
+            <span>Structural / flow edge</span>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

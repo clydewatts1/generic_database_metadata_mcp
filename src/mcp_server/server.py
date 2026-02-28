@@ -6,8 +6,9 @@ Uses the standard mcp.server.fastmcp.FastMCP with SSE transport via uvicorn.
 import sys
 
 from .app import mcp  # noqa: F401 – re-export for convenience
-from ..utils.logging import get_logger
+from ..utils.logging import configure_logging, get_logger
 
+configure_logging()
 logger = get_logger(__name__)
 
 

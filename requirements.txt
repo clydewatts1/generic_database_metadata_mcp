@@ -3,6 +3,10 @@ pydantic
 falkordb
 freezegun
 uvicorn
+fastapi
+PyJWT
+structlog
+pyyaml
 
 # Dev / testing
 pytest
