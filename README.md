@@ -1,14 +1,13 @@
 # generic_database_metadata_mcp
 
-A **stigmergic, context-frugal metadata MCP server** backed by FalkorDB.
+A **stigmergic, context-frugal metadata MCP server** backed by FalkorDB, with a **read-only visual web dashboard**.
 
-**Transport**: HTTP server with Server-Sent Events (SSE) on `localhost:8000`
+| Service | Transport | Default Port |
+|---------|-----------|-------------|
+| MCP Server | HTTP + SSE (FastMCP) | `8000` |
+| Visual Dashboard | HTTP (FastAPI + static) | `8080` |
 
-The server exposes a graph of typed metadata objects whose edges carry a living
-`confidence_score`.  Edges are reinforced every time they are traversed and
-decay when left unused — embodying the "use it or lose it" principle from ant
-colony stigmergy.  All responses use the compact **TOON** serialisation format
-to keep LLM context windows small.
+The server exposes a graph of typed metadata objects whose edges carry a living `confidence_score`. Edges are reinforced every time they are traversed and decay when left unused ÔÇö embodying the "use it or lose it" principle from ant colony stigmergy. MCP tool responses use the compact **TOON** serialisation format to keep LLM context windows small. The dashboard bypasses TOON and serves full JSON to the browser (Rule 3.6 exemption).
 
 ---
 
@@ -16,35 +15,68 @@ to keep LLM context windows small.
 
 ```
 src/
-├── graph/
-│   ├── client.py        # FalkorDB connection singleton
-│   ├── ontology.py      # MetaType CRUD + health-score management
-│   ├── nodes.py         # ObjectNode CRUD + bulk ingest
-│   ├── edges.py         # StigmergicEdge CRUD, reinforce, decay, cascading wither
-│   ├── decay.py         # Decay runner (single edge + full-graph sweep)
-│   └── query.py         # Bounded traversal (1-2 hops) + flat scan + pagination
-├── models/
-│   ├── base.py          # Pydantic models for all graph entities
-│   ├── dynamic.py       # Runtime model factory (pydantic.create_model)
-│   └── serialization.py # TOON compact serialiser / paginator
-├── mcp_server/
-│   ├── app.py           # FastMCP singleton
-│   ├── server.py        # Entry point – registers all tools, calls mcp.run()
-│   └── tools/
-│       ├── ingestion.py # insert_node, bulk_ingest_seed (circuit breaker)
-│       ├── ontology.py  # register_meta_type, list_meta_types_tool
-│       ├── stigmergy.py # create_stigmergic_edge, reinforce_stigmergic_edge
-│       └── query.py     # query_graph
-└── utils/
-    ├── logging.py       # Logger + error class hierarchy
-    └── context.py       # RequestContext (profile, domain, prompt hash, session)
+Ôö£ÔöÇÔöÇ graph/
+Ôöé   Ôö£ÔöÇÔöÇ client.py        # FalkorDB connection singleton
+Ôöé   Ôö£ÔöÇÔöÇ ontology.py      # MetaType CRUD + health-score management
+Ôöé   Ôö£ÔöÇÔöÇ nodes.py         # ObjectNode CRUD + bulk ingest
+Ôöé   Ôö£ÔöÇÔöÇ edges.py         # StigmergicEdge CRUD, reinforce, decay, cascading wither
+Ôöé   Ôö£ÔöÇÔöÇ decay.py         # Decay runner (single edge + full-graph sweep)
+Ôöé   Ôö£ÔöÇÔöÇ query.py         # Bounded traversal (1-2 hops) + flat scan + pagination
+Ôöé   ÔööÔöÇÔöÇ schema.py        # Graph schema helpers
+Ôö£ÔöÇÔöÇ dashboard/           # Visual web dashboard API (FastAPI, port 8080)
+Ôöé   Ôö£ÔöÇÔöÇ api.py           # App factory; mounts static files; /health + /api/graph
+Ôöé   Ôö£ÔöÇÔöÇ auth.py          # JWT Bearer decode; DashboardUser dependency; 401/403
+Ôöé   Ôö£ÔöÇÔöÇ router.py        # GET /api/graph route (scoped, read-only)
+Ôöé   Ôö£ÔöÇÔöÇ graph_service.py # DashboardGraphService ÔÇö wraps query.py; 500-node cap
+Ôöé   Ôö£ÔöÇÔöÇ models.py        # Pydantic response models (GraphNodeResponse, GraphEdgeResponse ÔÇª)
+Ôöé   Ôö£ÔöÇÔöÇ config.py        # Env-var loading (DASHBOARD_JWT_SECRET, DASHBOARD_PORT ÔÇª)
+Ôöé   ÔööÔöÇÔöÇ server.py        # uvicorn entrypoint (port 8080)
+Ôö£ÔöÇÔöÇ models/
+Ôöé   Ôö£ÔöÇÔöÇ base.py          # Pydantic models for all graph entities
+Ôöé   Ôö£ÔöÇÔöÇ dynamic.py       # Runtime model factory (pydantic.create_model)
+Ôöé   ÔööÔöÇÔöÇ serialization.py # TOON compact serialiser / paginator
+Ôö£ÔöÇÔöÇ mcp_server/
+Ôöé   Ôö£ÔöÇÔöÇ app.py           # FastMCP singleton
+Ôöé   Ôö£ÔöÇÔöÇ server.py        # Entry point ÔÇô registers all tools, calls mcp.run()
+Ôöé   Ôö£ÔöÇÔöÇ formatters/
+Ôöé   Ôöé   ÔööÔöÇÔöÇ toon.py      # TOON compact format helpers
+Ôöé   ÔööÔöÇÔöÇ tools/
+Ôöé       Ôö£ÔöÇÔöÇ ingestion.py # insert_node, bulk_ingest_seed (circuit breaker)
+Ôöé       Ôö£ÔöÇÔöÇ ontology.py  # register_meta_type, list_meta_types_tool
+Ôöé       Ôö£ÔöÇÔöÇ stigmergy.py # create_stigmergic_edge, reinforce_stigmergic_edge
+Ôöé       Ôö£ÔöÇÔöÇ query.py     # query_graph
+Ôöé       Ôö£ÔöÇÔöÇ lifecycle.py # deprecate_node, branch_node_for_domain, request/confirm deletion
+Ôöé       Ôö£ÔöÇÔöÇ healing.py   # suggest_schema_heals, confirm_schema_heal
+Ôöé       ÔööÔöÇÔöÇ functions.py # create_function, query_functions, attach_function_to_nodes
+ÔööÔöÇÔöÇ utils/
+    Ôö£ÔöÇÔöÇ logging.py       # Logger + error class hierarchy
+    ÔööÔöÇÔöÇ context.py       # RequestContext (profile, domain, prompt hash, session)
+
+dashboard/               # Frontend static assets (served by the dashboard API)
+Ôö£ÔöÇÔöÇ index.html           # Single-page app shell; loads Cytoscape.js 3.x from CDN
+Ôö£ÔöÇÔöÇ app.js               # Canvas render, node click/dim, filter panel, search, edge tooltips
+ÔööÔöÇÔöÇ style.css            # Full-height dark-theme layout; confidence_score edge encoding
+
 tests/
-├── conftest.py          # ephemeral_graph fixture (random-named FalkorDB graphs)
-└── unit/
-    ├── test_ontology.py
-    ├── test_ingestion.py
-    ├── test_stigmergy.py
-    └── test_decay.py
+Ôö£ÔöÇÔöÇ conftest.py
+Ôö£ÔöÇÔöÇ unit/
+Ôöé   Ôö£ÔöÇÔöÇ dashboard/
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ test_auth.py           # JWT auth (401/403, expired, missing claims)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ test_graph_service.py  # Scope enforcement, 500-node cap, confidence clamp
+Ôöé   Ôöé   ÔööÔöÇÔöÇ test_performance.py    # SC-002 serialisation Ôëñ1.5s, SC-005 filter Ôëñ50ms
+Ôöé   Ôö£ÔöÇÔöÇ test_ontology.py
+Ôöé   Ôö£ÔöÇÔöÇ test_ingestion.py
+Ôöé   Ôö£ÔöÇÔöÇ test_stigmergy.py
+Ôöé   Ôö£ÔöÇÔöÇ test_decay.py
+Ôöé   Ôö£ÔöÇÔöÇ test_domain_scoping.py
+Ôöé   Ôö£ÔöÇÔöÇ test_function_object_model.py
+Ôöé   Ôö£ÔöÇÔöÇ test_remaining_rules.py
+Ôöé   ÔööÔöÇÔöÇ test_serialization.py
+Ôö£ÔöÇÔöÇ integration/
+Ôöé   Ôö£ÔöÇÔöÇ test_dashboard_api.py      # Scope isolation, response shape, health probe, edge fields
+Ôöé   ÔööÔöÇÔöÇ test_function_objects_e2e.py
+ÔööÔöÇÔöÇ contract/
+    ÔööÔöÇÔöÇ test_dashboard_mutations.py  # Assert zero WRITE Cypher ops from any dashboard route
 ```
 
 ---
@@ -54,20 +86,19 @@ tests/
 | Requirement | Version | Notes |
 |-------------|---------|-------|
 | Python | 3.11+ | |
-| Docker | Latest | Runs FalkorDB (lightweight graph database) |
+| Docker | Latest | Runs FalkorDB |
 | pip | any | |
 
 ---
 
 ## Setup
 
-1. **Start FalkorDB** (lightweight graph database):
+1. **Start FalkorDB**:
    ```bash
    docker run -p 6379:6379 -it --rm falkordb/falkordb
    ```
-   This is the MCP server's graph backend (FalkorDBLite = lightweight, not a heavy SQL DB).
 
-2. **Install dependencies** (in another terminal):
+2. **Install dependencies**:
    ```bash
    git clone <repository-url>
    cd generic_database_metadata_mcp
@@ -83,60 +114,74 @@ tests/
 
 ---
 
-## Running the MCP Server (SSE over HTTP)
+## Running the MCP Server
 
-The server runs as an HTTP server with **Server-Sent Events (SSE)** transport on `http://127.0.0.1:8000`.
-
-Make sure FalkorDB is running in another terminal (see Setup above):
+Runs on `http://127.0.0.1:8000` (SSE transport).
 
 ```bash
-# Activate venv first
-.venv\Scripts\activate  # Windows
-# or
-source .venv/bin/activate  # macOS / Linux
-
-# Start the server (connects to FalkorDB at localhost:6379)
 python -m src.mcp_server.server
 ```
 
-The server will log:
+Expected log output:
 ```
-INFO:  src.graph.client: Connecting to FalkorDB at localhost:6379
-INFO:  src.mcp_server.server:  [FastMCP] MCP tools registered: 17
-INFO:  uvicorn.server: Uvicorn running on http://127.0.0.1:8000 (press CTRL+C to quit)
+INFO: src.graph.client: Connecting to FalkorDB at localhost:6379
+INFO: src.mcp_server.server: [FastMCP] MCP tools registered: 17
+INFO: uvicorn.server: Uvicorn running on http://127.0.0.1:8000
 ```
 
-Alternatively, use uvicorn directly:
+Or directly via uvicorn:
 ```bash
 uvicorn src.mcp_server.app:app --host 127.0.0.1 --port 8000
 ```
 
 ---
 
-## Architecture Overview
+## Running the Visual Dashboard
 
-**FalkorDB** (FalkorDBLite = lightweight graph database):
-- **Not** a heavyweight SQL database like Teradata
-- **Lightweight, fast** graph for metadata connections and lineage
-- Runs in Docker during development  
-- Context-frugal by design (bounded queries, pagination, TOON serialization)
+Runs on `http://127.0.0.1:8080` as a **separate process**. Requires the `DASHBOARD_JWT_SECRET` env var.
 
-**MCP Server** (FastMCP on SSE/HTTP):
-- Exposes 17 MCP tools for metadata management, stigmergic edges, dynamic schemas, lineage tracking
-- All responses use TOON compact serialization to minimize token consumption
-- Domain-scoped visibility (Rule 5.1-5.3)
+```bash
+export DASHBOARD_JWT_SECRET="your-secret-here"
+python -m src.dashboard.server
+```
+
+Open `http://localhost:8080` in a browser, paste a valid JWT, and the metadata graph renders automatically.
+
+### Dashboard environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DASHBOARD_JWT_SECRET` | *(required)* | HS256 secret for JWT Bearer token validation |
+| `DASHBOARD_PORT` | `8080` | Port the dashboard server listens on |
+| `DASHBOARD_NODE_LIMIT` | `500` | Max nodes returned per scoped payload |
+| `FALKORDB_HOST` | `localhost` | FalkorDB hostname |
+| `FALKORDB_PORT` | `6379` | FalkorDB port |
+
+---
+
+## Dashboard Features
+
+### US1 ÔÇö Interactive Graph Canvas
+Nodes in the authenticated user's permitted scope render as a pan/zoom Cytoscape.js canvas within 3 seconds. Click a node to open a properties side-panel and dim non-adjacent nodes. Press Escape or click the background to restore.
+
+### US2 ÔÇö Stigmergic vs Structural Edges
+Stigmergic edges encode `confidence_score` as line width (1 px at 0.0 ÔåÆ 6 px at 1.0). Edges below 0.2 render dashed and de-emphasised. Structural edges are a fixed 1.5 px solid grey line. Hover any edge for a tooltip ÔÇö stigmergic tooltips include `confidence_score`, `rationale_summary`, and `last_accessed`.
+
+### US3 ÔÇö Filter & Search
+Select one or more Object Types from the filter panel to restrict visible nodes. Type a `business_name` substring to dim non-matching nodes and auto-centre on the most-connected match. Refresh button resets both.
+
+### US4 ÔÇö Profile-Aware Scoped View
+Every API request requires a JWT bearing `profile_id` and `domain_scope`. Domain scoping is enforced server-side on every query ÔÇö no cross-domain data leaks are possible. Missing token ÔåÆ HTTP 401; missing claims ÔåÆ HTTP 403.
 
 ---
 
 ## Testing with MCP Inspector
 
-Once the server is running, connect via the MCP Inspector:
-
 ```bash
 npx @modelcontextprotocol/inspector
 ```
 
-In the Inspector UI, configure an SSE connection to `http://127.0.0.1:8000` and start testing the 17 MCP tools.
+Configure an SSE connection to `http://127.0.0.1:8000`.
 
 ---
 
@@ -191,18 +236,6 @@ In the Inspector UI, configure an SSE connection to `http://127.0.0.1:8000` and 
 }
 ```
 
-### Example: suggest schema heals (Rule 2.7)
-
-```json
-{
-  "tool": "suggest_schema_heals",
-  "arguments": {
-    "profile_id": "user_alice",
-    "domain_scope": "Finance"
-  }
-}
-```
-
 ### Example: deprecate a node (Rule 4.5)
 
 ```json
@@ -216,7 +249,7 @@ In the Inspector UI, configure an SSE connection to `http://127.0.0.1:8000` and 
 }
 ```
 
-### Example: branch node for domain (Rule 5.4 - Parallel Truths)
+### Example: branch node for domain (Rule 5.4 ÔÇö Parallel Truths)
 
 ```json
 {
@@ -236,32 +269,36 @@ In the Inspector UI, configure an SSE connection to `http://127.0.0.1:8000` and 
 
 | Component | Rules | Status |
 |-----------|-------|--------|
-| **Dynamic Meta-Ontology** | 2.1-2.8 | ✅ Complete |
-| **Stigmergic Execution** | 4.1-4.5 | ✅ Complete |
-| **Profile-Aware Scoping** | 5.1-5.5 | ✅ Complete |
-| **Testing & Validation** | 6.1-6.3 | ✅ Complete |
-| **Context Frugality** | 3.1-3.5 | ✅ Complete |
+| **Dynamic Meta-Ontology** | 2.1ÔÇô2.8 | Ô£à Complete |
+| **Context Frugality (MCP)** | 3.1ÔÇô3.5 | Ô£à Complete |
+| **Human Viewport Exception** | 3.6 | Ô£à Complete ÔÇö dashboard API exempt from TOON/compression |
+| **Stigmergic Execution** | 4.1ÔÇô4.5 | Ô£à Complete |
+| **Human Override Authority** | 4.7 | ÔÜá´©Å Ratified v1.3.0 ÔÇö implementation pending (4.6 reserved) |
+| **Profile-Aware Scoping** | 5.1ÔÇô5.5 | Ô£à Complete |
+| **Dashboard Unified Security Layer** | 5.6 | Ô£à Implemented on `001-schema-health-widget` ÔÇö pending merge to `main` |
+| **Audit Logging (Human Viewport)** | 5.7 | ÔÜá´©Å Ratified v1.2.0 ÔÇö implementation pending |
+| **Testing & Validation** | 6.1ÔÇô6.3 | Ô£à Complete |
 
-All 26 specification rules have been implemented and tested.
+26 rules defined. Constitution v1.3.1: Rule 5.6 implemented on `001-schema-health-widget` (pending merge). Rules 4.7 and 5.7 remain pending implementation. Rule 4.6 reserved.
 
-````
+---
 
-## TOON Serialisation
+## TOON Serialisation (MCP tools only)
 
-All tools that return lists use the **TOON** compact format:
+All MCP tools that return lists use the **TOON** compact format:
 
-- Keys are abbreviated (`confidence_score` → `cs`, `name` → `n`, etc.)
-- Default / empty values are stripped (`"Global"`, `"SYSTEM_GENERATED"`, `null`, `""`, `{}`, `[]`)
+- Keys are abbreviated (`confidence_score` ÔåÆ `cs`, `name` ÔåÆ `n`, etc.)
+- Default / empty values are stripped
 - Hard cap: 10 KB per response payload
 - Paginated envelope: `{"items": [...], "total": N, "page": P, "has_more": bool}`
+
+The dashboard API is **explicitly exempt** from TOON per Rule 3.6 ÔÇö it serves full JSON to the browser.
 
 ---
 
 ## Stigmergic Decay
 
-Edges decay passively over time (0.05 / day) once the 24-hour access threshold
-passes.  Edges whose `confidence_score` drops below **0.1** are automatically
-pruned.  Run a full decay sweep at any time:
+Edges decay passively over time (0.05 / day) once the 24-hour access threshold passes. Edges whose `confidence_score` drops below **0.1** are automatically pruned. Run a full decay sweep at any time:
 
 ```python
 from src.graph.decay import run_all_decay
@@ -274,13 +311,14 @@ result = run_all_decay()
 ## Testing
 
 ```bash
-# Uses embedded FalkorDBLite (no external dependencies)
+# All tests (requires FalkorDB running)
 pytest tests/ -v
+
+# Dashboard tests only (no live FalkorDB needed)
+pytest tests/unit/dashboard/ tests/contract/ tests/integration/test_dashboard_api.py -v
 ```
 
-Tests use `freezegun` to simulate time passage for decay assertions without
-real waits.  Each test runs in an isolated ephemeral graph (random UUID name)
-and the graph is deleted on teardown.
+Dashboard tests use FastAPI `TestClient` with monkeypatched service methods ÔÇö no live FalkorDB required. All other tests use an ephemeral random-named FalkorDB graph torn down on completion. `freezegun` is used to simulate time passage for decay assertions.
 
 ---
 
