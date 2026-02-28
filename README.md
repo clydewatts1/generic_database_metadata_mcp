@@ -24,12 +24,15 @@ src/
 │   ├── query.py         # Bounded traversal (1-2 hops) + flat scan + pagination
 │   └── schema.py        # Graph schema helpers
 ├── dashboard/           # Visual web dashboard API (FastAPI, port 8080)
-│   ├── api.py           # App factory; mounts static files; /health + /api/graph
+│   ├── api.py           # App factory; mounts static files; /health + /api/graph + /api/health
 │   ├── auth.py          # JWT Bearer decode; DashboardUser dependency; 401/403
 │   ├── router.py        # GET /api/graph route (scoped, read-only)
+│   ├── health_router.py # GET /api/health/meta-types — USL enforced at constructor level
+│   ├── health_service.py# HealthService: colour-band computation, DASHBOARD_NODE_LIMIT cap
+│   ├── security.py      # Unified Security Layer: derive_session_id, AuditService, unified_security
 │   ├── graph_service.py # DashboardGraphService — wraps query.py; 500-node cap
-│   ├── models.py        # Pydantic response models (GraphNodeResponse, GraphEdgeResponse …)
-│   ├── config.py        # Env-var loading (DASHBOARD_JWT_SECRET, DASHBOARD_PORT …)
+│   ├── models.py        # Pydantic response models (GraphNodeResponse, HealthPayloadResponse, ...)
+│   ├── config.py        # Env-var loading (DASHBOARD_JWT_SECRET, DASHBOARD_PORT, ...)
 │   └── server.py        # uvicorn entrypoint (port 8080)
 ├── models/
 │   ├── base.py          # Pydantic models for all graph entities
@@ -37,7 +40,7 @@ src/
 │   └── serialization.py # TOON compact serialiser / paginator
 ├── mcp_server/
 │   ├── app.py           # FastMCP singleton
-│   ├── server.py        # Entry point – registers all tools, calls mcp.run()
+│   ├── server.py        # Entry point — registers all tools, calls mcp.run()
 │   ├── formatters/
 │   │   └── toon.py      # TOON compact format helpers
 │   └── tools/
@@ -54,16 +57,23 @@ src/
 
 dashboard/               # Frontend static assets (served by the dashboard API)
 ├── index.html           # Single-page app shell; loads Cytoscape.js 3.x from CDN
-├── app.js               # Canvas render, node click/dim, filter panel, search, edge tooltips
-└── style.css            # Full-height dark-theme layout; confidence_score edge encoding
+├── app.js               # Canvas render, node click/dim, filter panel, search, edge tooltips,
+│                        #   schema health panel (colour-band indicators, refresh, degraded state)
+└── style.css            # Full-height dark-theme layout; confidence_score edge encoding;
+                         #   health indicator colour classes (.health-green/amber/red)
+
+scripts/
+└── bootstrap_indices.py # Create FalkorDB indices on HumanAuditLog (profile_id, timestamp)
 
 tests/
 ├── conftest.py
 ├── unit/
 │   ├── dashboard/
-│   │   ├── test_auth.py           # JWT auth (401/403, expired, missing claims)
-│   │   ├── test_graph_service.py  # Scope enforcement, 500-node cap, confidence clamp
-│   │   └── test_performance.py    # SC-002 serialisation ≤1.5s, SC-005 filter ≤50ms
+│   │   ├── test_auth.py              # JWT auth (401/403, expired, missing claims)
+│   │   ├── test_graph_service.py     # Scope enforcement, 500-node cap, confidence clamp
+│   │   ├── test_health_service.py    # Health band boundaries, truncation, error handling
+│   │   ├── test_unified_security.py  # USL: derive_session_id, audit write, 401/403/503
+│   │   └── test_performance.py       # SC-002 serialisation <=1.5s, SC-005 filter <=50ms
 │   ├── test_ontology.py
 │   ├── test_ingestion.py
 │   ├── test_stigmergy.py
@@ -73,10 +83,11 @@ tests/
 │   ├── test_remaining_rules.py
 │   └── test_serialization.py
 ├── integration/
-│   ├── test_dashboard_api.py      # Scope isolation, response shape, health probe, edge fields
+│   ├── test_dashboard_api.py         # Scope isolation, health endpoint, audit, degraded state
 │   └── test_function_objects_e2e.py
 └── contract/
-    └── test_dashboard_mutations.py  # Assert zero WRITE Cypher ops from any dashboard route
+    ├── test_dashboard_mutations.py   # Assert zero WRITE Cypher ops from any dashboard route
+    └── test_health_mutations.py      # Static-analysis contract: no mutation Cypher in health code
 ```
 
 ---
@@ -112,6 +123,11 @@ tests/
    pip install -r requirements.txt
    ```
 
+3. **Bootstrap FalkorDB indices** (first run only):
+   ```bash
+   python scripts/bootstrap_indices.py
+   ```
+
 ---
 
 ## Running the MCP Server
@@ -127,11 +143,6 @@ Expected log output:
 INFO: src.graph.client: Connecting to FalkorDB at localhost:6379
 INFO: src.mcp_server.server: [FastMCP] MCP tools registered: 17
 INFO: uvicorn.server: Uvicorn running on http://127.0.0.1:8000
-```
-
-Or directly via uvicorn:
-```bash
-uvicorn src.mcp_server.app:app --host 127.0.0.1 --port 8000
 ```
 
 ---
@@ -162,16 +173,28 @@ Open `http://localhost:8080` in a browser, paste a valid JWT, and the metadata g
 ## Dashboard Features
 
 ### US1 — Interactive Graph Canvas
+
 Nodes in the authenticated user's permitted scope render as a pan/zoom Cytoscape.js canvas within 3 seconds. Click a node to open a properties side-panel and dim non-adjacent nodes. Press Escape or click the background to restore.
 
 ### US2 — Stigmergic vs Structural Edges
-Stigmergic edges encode `confidence_score` as line width (1 px at 0.0 ÔåÆ 6 px at 1.0). Edges below 0.2 render dashed and de-emphasised. Structural edges are a fixed 1.5 px solid grey line. Hover any edge for a tooltip — stigmergic tooltips include `confidence_score`, `rationale_summary`, and `last_accessed`.
+
+Stigmergic edges encode `confidence_score` as line width (1 px at 0.0 -> 6 px at 1.0). Edges below 0.2 render dashed and de-emphasised. Structural edges are a fixed 1.5 px solid grey line. Hover any edge for a tooltip — stigmergic tooltips include `confidence_score`, `rationale_summary`, and `last_accessed`.
 
 ### US3 — Filter & Search
+
 Select one or more Object Types from the filter panel to restrict visible nodes. Type a `business_name` substring to dim non-matching nodes and auto-centre on the most-connected match. Refresh button resets both.
 
 ### US4 — Profile-Aware Scoped View
-Every API request requires a JWT bearing `profile_id` and `domain_scope`. Domain scoping is enforced server-side on every query — no cross-domain data leaks are possible. Missing token ÔåÆ HTTP 401; missing claims ÔåÆ HTTP 403.
+
+Every API request requires a JWT bearing `profile_id` and `domain_scope`. Domain scoping is enforced server-side on every query — no cross-domain data leaks are possible. Missing token -> HTTP 401; missing claims -> HTTP 403.
+
+### US5 — Schema Health Widget
+
+A collapsible health panel shows every MetaType in the user's scope sorted by `health_score` ascending (unhealthiest first). Each row displays a colour-coded indicator (green >= 0.8, amber >= 0.5, red < 0.5), the MetaType name, category, and score. When the health data service is unavailable the panel displays a yellow degraded banner. Auto-refreshes on load; manual refresh button provided.
+
+**API endpoint**: `GET /api/health/meta-types`
+**Auth**: JWT Bearer (same token as graph canvas)
+**Response fields**: `items[]`, `total_available`, `truncated`, `audit_status`
 
 ---
 
@@ -197,7 +220,7 @@ Configure an SSE connection to `http://127.0.0.1:8000`.
 | `reinforce_stigmergic_edge` | US3 | Reinforce an edge (+0.1, capped at 1.0) |
 | `query_graph` | US4 | Query nodes with optional traversal, domain filter, pagination |
 | `suggest_schema_heals` | Rule 2.7 | Identify MetaTypes with low health scores and suggest healing |
-| `confirm_schema_heal` | Rule 2.7 | Reset a MetaType's health score to 1.0 after schema healing |
+| `confirm_schema_heal` | Rule 2.7 | Reset a MetaType health score to 1.0 after schema healing |
 | `deprecate_node` | Rule 4.5 | Deprecate a node and trigger cascading wither (prune attached edges) |
 | `branch_node_for_domain` | Rule 5.4 | Create a domain-specific copy of a node (Parallel Truths) |
 | `request_node_deletion` | Rule 5.5 | Request deletion with approval flow (Supreme Court) |
@@ -269,17 +292,17 @@ Configure an SSE connection to `http://127.0.0.1:8000`.
 
 | Component | Rules | Status |
 |-----------|-------|--------|
-| **Dynamic Meta-Ontology** | 2.1–2.8 | Ô£à Complete |
-| **Context Frugality (MCP)** | 3.1–3.5 | Ô£à Complete |
-| **Human Viewport Exception** | 3.6 | Ô£à Complete — dashboard API exempt from TOON/compression |
-| **Stigmergic Execution** | 4.1–4.5 | Ô£à Complete |
-| **Human Override Authority** | 4.7 | ÔÜá´©Å Ratified v1.3.0 — implementation pending (4.6 reserved) |
-| **Profile-Aware Scoping** | 5.1–5.5 | Ô£à Complete |
-| **Dashboard Unified Security Layer** | 5.6 | Ô£à Implemented on `001-schema-health-widget` — pending merge to `main` |
-| **Audit Logging (Human Viewport)** | 5.7 | ÔÜá´©Å Ratified v1.2.0 — implementation pending |
-| **Testing & Validation** | 6.1–6.3 | Ô£à Complete |
+| **Dynamic Meta-Ontology** | 2.1-2.8 | Complete |
+| **Context Frugality (MCP)** | 3.1-3.5 | Complete |
+| **Human Viewport Exception** | 3.6 | Complete — dashboard API exempt from TOON/compression |
+| **Stigmergic Execution** | 4.1-4.5 | Complete |
+| **Human Override Authority** | 4.7 | Ratified v1.3.0 — implementation pending (4.6 reserved) |
+| **Profile-Aware Scoping** | 5.1-5.5 | Complete |
+| **Dashboard Unified Security Layer** | 5.6 | Implemented — security.py, health_router.py, USL on all health routes |
+| **Audit Logging (Human Viewport)** | 5.7 | Partial — READ audit implemented; MUTATION audit pending Rule 4.7 feature |
+| **Testing & Validation** | 6.1-6.3 | Complete |
 
-26 rules defined. Constitution v1.3.1: Rule 5.6 implemented on `001-schema-health-widget` (pending merge). Rules 4.7 and 5.7 remain pending implementation. Rule 4.6 reserved.
+27 rules defined across 7 sections. Constitution v1.3.1. Rules 4.7 (Human Override Authority) and full 5.7 (MUTATION audit) remain pending implementation.
 
 ---
 
@@ -287,7 +310,7 @@ Configure an SSE connection to `http://127.0.0.1:8000`.
 
 All MCP tools that return lists use the **TOON** compact format:
 
-- Keys are abbreviated (`confidence_score` ÔåÆ `cs`, `name` ÔåÆ `n`, etc.)
+- Keys are abbreviated (`confidence_score` -> `cs`, `name` -> `n`, etc.)
 - Default / empty values are stripped
 - Hard cap: 10 KB per response payload
 - Paginated envelope: `{"items": [...], "total": N, "page": P, "has_more": bool}`
