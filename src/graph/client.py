@@ -1,4 +1,9 @@
-"""FalkorDB client wrapper – provides a single shared connection to the graph."""
+"""FalkorDB client wrapper – provides a single shared connection to the lightweight FalkorDB graph.
+
+FalkorDB (FalkorDBLite = lightweight embedded version) is our choice of graph database
+to keep metadata querying context-frugal. It runs in a separate container for
+development and testing.
+"""
 
 from __future__ import annotations
 
@@ -21,7 +26,11 @@ _graph: Graph | None = None
 
 
 def get_client(host: str = _DEFAULT_HOST, port: int = _DEFAULT_PORT) -> FalkorDB:
-    """Return (and lazily initialise) the shared FalkorDB client."""
+    """Return (and lazily initialise) the shared FalkorDB client.
+    
+    FalkorDB (lightweight, embedded graph DB) typically runs via Docker for dev/test,
+    or as a standalone server in production.
+    """
     global _client
     if _client is None:
         logger.info("Connecting to FalkorDB at %s:%s", host, port)

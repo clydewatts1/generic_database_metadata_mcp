@@ -51,40 +51,43 @@ tests/
 
 ## Prerequisites
 
-| Requirement | Version |
-|-------------|---------|
-| Python | 3.11+ |
-| FalkorDB | any (running at `localhost:6379`) |
-| pip | any |
-
-Quick way to start FalkorDB with Docker:
-
-```bash
-docker run -p 6379:6379 -it --rm falkordb/falkordb
-```
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| Python | 3.11+ | |
+| Docker | Latest | Runs FalkorDB (lightweight graph database) |
+| pip | any | |
 
 ---
 
 ## Setup
 
-```bash
-git clone <repository-url>
-cd generic_database_metadata_mcp
+1. **Start FalkorDB** (lightweight graph database):
+   ```bash
+   docker run -p 6379:6379 -it --rm falkordb/falkordb
+   ```
+   This is the MCP server's graph backend (FalkorDBLite = lightweight, not a heavy SQL DB).
 
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS / Linux
-source .venv/bin/activate
+2. **Install dependencies** (in another terminal):
+   ```bash
+   git clone <repository-url>
+   cd generic_database_metadata_mcp
 
-pip install -r requirements.txt
-```
+   python -m venv .venv
+   # Windows
+   .venv\Scripts\activate
+   # macOS / Linux
+   source .venv/bin/activate
+
+   pip install -r requirements.txt
+   ```
 
 ---
 
 ## Running the MCP Server (SSE over HTTP)
 
-The server runs as an HTTP server with **Server-Sent Events (SSE)** transport on `http://127.0.0.1:8000`:
+The server runs as an HTTP server with **Server-Sent Events (SSE)** transport on `http://127.0.0.1:8000`.
+
+Make sure FalkorDB is running in another terminal (see Setup above):
 
 ```bash
 # Activate venv first
@@ -92,19 +95,36 @@ The server runs as an HTTP server with **Server-Sent Events (SSE)** transport on
 # or
 source .venv/bin/activate  # macOS / Linux
 
-# Start the server
+# Start the server (connects to FalkorDB at localhost:6379)
 python -m src.mcp_server.server
 ```
 
 The server will log:
 ```
-Starting Stigmergic MCP Metadata Server on http://127.0.0.1:8000 (SSE)...
+INFO:  src.graph.client: Connecting to FalkorDB at localhost:6379
+INFO:  src.mcp_server.server:  [FastMCP] MCP tools registered: 17
+INFO:  uvicorn.server: Uvicorn running on http://127.0.0.1:8000 (press CTRL+C to quit)
 ```
 
 Alternatively, use uvicorn directly:
 ```bash
-uvicorn src.mcp_server.server:app --host 127.0.0.1 --port 8000
+uvicorn src.mcp_server.app:app --host 127.0.0.1 --port 8000
 ```
+
+---
+
+## Architecture Overview
+
+**FalkorDB** (FalkorDBLite = lightweight graph database):
+- **Not** a heavyweight SQL database like Teradata
+- **Lightweight, fast** graph for metadata connections and lineage
+- Runs in Docker during development  
+- Context-frugal by design (bounded queries, pagination, TOON serialization)
+
+**MCP Server** (FastMCP on SSE/HTTP):
+- Exposes 17 MCP tools for metadata management, stigmergic edges, dynamic schemas, lineage tracking
+- All responses use TOON compact serialization to minimize token consumption
+- Domain-scoped visibility (Rule 5.1-5.3)
 
 ---
 
@@ -254,7 +274,7 @@ result = run_all_decay()
 ## Testing
 
 ```bash
-# Requires a running FalkorDB instance at localhost:6379
+# Uses embedded FalkorDBLite (no external dependencies)
 pytest tests/ -v
 ```
 

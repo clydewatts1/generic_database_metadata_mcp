@@ -3,7 +3,7 @@
 ## 1. `bulk_ingest_seed`
 **Purpose**: Ingest initial metadata without overwhelming the AI context window.
 **Input**:
-- `file_path` (String): Absolute path to the data file (e.g., CSV).
+- `file_path` (String): Absolute path to the YAML bulk specification file.
 **Output**:
 - `success` (Boolean): True if ingestion was successful.
 - `nodes_created` (Integer): Number of nodes created.
@@ -85,3 +85,40 @@
 **Output**:
 - `attachments_created` (Integer): Number of relationships created.
 - `status` (String): "SUCCESS" or "PARTIAL_SUCCESS".
+
+## 8. \confirm_schema_heal\
+**Purpose**: Unlocks the circuit breaker after an AI successfully evolves/patches a broken MetaType definition.
+**Input**:
+- \meta_type_name\ (String): Name of the schema that was patched.
+**Output**: 
+- \status\ (String): SUCCESS if the breaker is unlocked.
+
+## 9. \create_function\
+**Purpose**: Creates a transformation/ETL concept directly in the graph.
+**Input**:
+- \
+ame\ (String): PascalCase name of the function.
+- \logic_description\ (String): What the function does.
+- \input_schema\ (JSON Schema).
+- \output_schema\ (JSON Schema).
+**Output**:
+- \unction_id\ (UUID).
+
+## 10. \query_functions\
+**Purpose**: Context-frugal search for Function Objects.
+**Input**:
+- \
+ame\ (String - optional)
+- \page\ (Integer - default 1)
+**Output**:
+- Paginated TOON serialized list of Function Objects.
+
+## 11. \ttach_function_to_nodes\
+**Purpose**: Associates an ETL rule with specific domain nodes it transforms via \[:TRANSFORMS]\.
+**Input**:
+- \unction_id\ (UUID)
+- \
+ode_ids\ (Array of UUIDs)
+**Output**:
+- \success_count\ (Integer)
+- \ailure_count\ (Integer)

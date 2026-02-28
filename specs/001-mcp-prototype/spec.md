@@ -2,8 +2,20 @@
 
 **Feature Branch**: `001-mcp-prototype`  
 **Created**: 2026-02-27  
-**Status**: Draft  
+**Status**: Complete  
 **Input**: User description: "Implement the feature specification based on the updated constitution. I want to build a working prototype based on the constitution"
+
+## Technology Stack
+
+**Database**: FalkorDBLite (lightweight graph database)  
+- Lightweight alternative to heavy SQL/OLAP systems (Teradata, PostgreSQL)
+- Fast graph traversals using Cypher query language
+- Context-frugal by design (bounded queries, pagination support)
+- Deployed via Docker for reproducible dev/test/prod environments
+
+**API Transport**: HTTP/SSE (Server-Sent Events) on port 8000  
+**Python Version**: 3.11+  
+**Key Dependencies**: mcp (MCP SDK), falkordb (client), pydantic (v2), freezegun (testing)
 
 ## Clarifications
 
@@ -20,6 +32,12 @@
 - Q: Function Objects are specified but lack MCP tools or tests. Should they be: → A: Implement tools (create_function, query_functions, attach_function_to_nodes)
 - Q: How should a locked circuit breaker (Rule 2.8) be unlocked after 3 validation failures? → A: Via confirm_schema_heal MCP tool (requires schema fix; lockout persists until schema evolved)
 - Q: For query result pagination (FR-007), what is the max nodes per page before pagination triggers? → A: Return maximum 5 nodes per page; paginate if result > 5
+
+### Session 2026-02-28 (Clarification Review)
+- Q: How should a MetaType node be structured in the graph? → A: Suggested structure (type_name, description, required_fields, field_schemas, health_score, created_at, created_by_prompt_hash)
+- Q: What file format should the `bulk_ingest_seed` tool accept? → A: YAML bulk specification (modern, supports complex nested structures, avoids relational constraints of CSV)
+- Q: How should observability (logging/metrics) be handled? → A: Structured JSON logging to stdout (easy parsing of metrics like payload_size without bloating payload)
+- Q: How should Parallel Truths branching be executed? → A: Create new node, link to original via `[:VARIANTS]` (preserves original as umbrella term)
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -100,7 +118,7 @@ As a user, I want my queries and stigmergic traces to be scoped to my domain (e.
 - What happens when an AI agent repeatedly fails schema validation? (Circuit Breaker triggers after 3 failures, locking the action and requiring human intervention).
 - What happens when a Stigmergic Edge is not accessed for a long time? (Biological Decay reduces its confidence score, eventually pruning it if it falls below the threshold).
 - What happens when a technical node is deprecated? (Cascading Wither applies a massive decay penalty to all attached stigmergic edges).
-- What happens when conflicting stigmergic connections arise from different domains? (Parallel Truths branch the node into domain-specific versions).
+- What happens when conflicting stigmergic connections arise from different domains? (Parallel Truths branch the node into domain-specific versions linked via `[:VARIANTS]`).
 
 ## Requirements *(mandatory)*
 
@@ -119,7 +137,7 @@ As a user, I want my queries and stigmergic traces to be scoped to my domain (e.
 
 ### Functional Requirements
 
-- **FR-001**: System MUST provide a `bulk_ingest_seed` tool for initial data loading without returning the full graph.
+- **FR-001**: System MUST provide a `bulk_ingest_seed` tool for initial data loading without returning the full graph. Ingestion payloads MUST be formatted as a YAML bulk specification to support modern, complex nested structures without relational constraints.
 - **FR-002**: System MUST allow dynamic registration of Object Types and Edge Types.
 - **FR-003**: System MUST generate validation schemas for registered types and validate all insertions against them.
 - **FR-004**: System MUST track the health_score of schema nodes and decrement it upon validation failures.
@@ -134,7 +152,7 @@ As a user, I want my queries and stigmergic traces to be scoped to my domain (e.
 - **FR-013**: System MUST apply Cascading Wither to edges attached to deprecated/deleted nodes.
 - **FR-014**: System MUST inject profile_id and domain_scope into all tool invocations.
 - **FR-015**: System MUST filter query results based on the user's domain scope.
-- **FR-016**: System MUST branch nodes into domain-specific versions when high-confidence conflicts occur (Parallel Truths).
+- **FR-016**: System MUST branch nodes into domain-specific versions linked via `[:VARIANTS]` when high-confidence conflicts occur (Parallel Truths).
 - **FR-017**: System MUST require explicit human approval for destructive modifications (deletion only; property updates do not require approval) to global nodes or MetaTypes (Supreme Court escalation via [APPROVAL_REQUIRED] payload).
 
 ### Key Entities

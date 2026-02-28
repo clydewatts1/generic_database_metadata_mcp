@@ -2,26 +2,28 @@
 
 ## Prerequisites
 - Python 3.11+
+- Docker (to run FalkorDB - lightweight graph database)
 - `pip` or `poetry` for dependency management
-- A local instance of FalkorDBLite (or Docker equivalent)
 
 ## Setup
 
-1. **Clone the repository**:
+1. **Start FalkorDB** (in one terminal):
+   ```bash
+   docker run -p 6379:6379 -it --rm falkordb/falkordb
+   ```
+
+2. **Clone and setup** (in another terminal):
    ```bash
    git clone <repository-url>
    cd generic_database_metadata_mcp
    ```
 
-2. **Install dependencies**:
+3. **Install dependencies**:
    ```bash
    pip install -r requirements.txt
    # or
    poetry install
    ```
-
-3. **Start FalkorDBLite**:
-   Ensure your local FalkorDBLite instance is running and accessible.
 
 4. **Run the MCP Server**:
    ```bash
@@ -36,7 +38,7 @@ Use the `bulk_ingest_seed` tool to load initial data without overwhelming the co
 {
   "tool": "bulk_ingest_seed",
   "arguments": {
-    "file_path": "/path/to/seed_data.csv"
+    "file_path": "/path/to/seed_data.yaml"
   }
 }
 ```

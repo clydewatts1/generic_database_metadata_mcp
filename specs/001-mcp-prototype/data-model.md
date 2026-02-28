@@ -1,5 +1,19 @@
 # Data Model: Stigmergic MCP Metadata Server Prototype
 
+## Technology: FalkorDBLite Graph Database
+
+**Choice Rationale**:  
+FalkorDBLite was selected as the lightweight graph database (not heavyweight SQL like Teradata) to enable:
+- Fast, bounded graph traversals with strict depth limits (1-2 hops max)
+- Natural representation of metadata lineage via graph edges
+- Built-in context frugality via pagination and query bounds
+- Supports dynamic schema registration via Pydantic + Cypher
+
+**Implementation**:  
+FalkorDB (lightweight graph DB) runs in Docker for dev/test and as standalone server in production. Python client (`falkordb` package) connects to server on `localhost:6379` by default.
+
+---
+
 ## Entities
 
 ### 1. MetaType (Schema Definition)
@@ -11,6 +25,10 @@ Defines the structure and validation rules for Object Nodes and Edge Types.
 - `type_category` (Enum: "NODE", "EDGE"): Whether this defines a node or an edge. Properties are defined within the `schema_definition`, not as separate graph elements.
 - `schema_definition` (JSON/Dict): A valid JSON Schema representation of the Pydantic model. Supported data types: `string`, `integer`, `float`, `boolean`, `array` of strings.
 - `health_score` (Float): Defaults to 1.0. Decrements by 0.1 on validation failures. If `health_score` <= 0.0, the MetaType is permanently locked and requires human intervention.
+- `created_at` (Timestamp): Record of schema creation.
+- `created_by_prompt_hash` (String): Hash of the prompt that created the schema.
+- `rationale_summary` (String): AI-generated explanation detailing why this schema was created or patched.
+- `relationship_class` (Enum: "STRUCTURAL", "FLOW", "NONE"): Distinguishes hierarchical containment (STRUCTURAL) from data lineage (FLOW) as mandated by Rule 2.4.
 - `version` (Integer): Used for optimistic concurrency control during schema updates.
 
 **Relationships:**
@@ -32,6 +50,7 @@ An instance of a MetaType, representing a Business Term or Technical Node.
 **Relationships:**
 - `[:INSTANCE_OF]` -> `MetaType`
 - `[:STIGMERGIC_LINK]` -> `Object Node`
+- `[:VARIANTS]` -> `Object Node` (Used for Parallel Truths polysemy branching. Links domain-specific implementations to global/umbrella concepts).
 
 ### 3. Stigmergic Edge (Relationship)
 A dynamic, confidence-weighted connection between nodes.

@@ -1,36 +1,36 @@
 # Implementation Plan: Stigmergic MCP Metadata Server Prototype
 
-**Branch**: `001-mcp-prototype` | **Date**: 2026-02-27 | **Spec**: [spec.md](spec.md)
+**Branch**: `001-mcp-prototype` | **Date**: 2026-02-28 | **Spec**: [specs/001-mcp-prototype/spec.md](./spec.md)
 **Input**: Feature specification from `/specs/001-mcp-prototype/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
 
 ## Summary
 
-Build a lightweight, context-frugal Model Context Protocol (MCP) server that functions as a "Glossary Weaver" using a stigmergic approach. The prototype will support dynamic meta-ontology creation, context-frugal querying with compact serialization, and stigmergic edge reinforcement and decay.
+Build a lightweight, context-frugal Model Context Protocol (MCP) server that functions as a dynamic, stigmergic metadata graph (mimicking Teradata Metadata Services). Uses FalkorDBLite, strict dynamic Pydantic generation, and highly compact output serialization.
 
 ## Technical Context
 
 **Language/Version**: Python 3.11+
-**Primary Dependencies**: mcp (FastMCP), Pydantic, freezegun
-**Storage**: FalkorDBLite (embedded graph database)
-**Testing**: pytest
-**Target Platform**: Local MCP Server
-**Project Type**: MCP Server
-**Performance Goals**: Ingest 10k nodes in < 1 minute
-**Constraints**: < 10KB payload size for bulk ingest, bounded Cypher queries (*1..2 hops), pagination (>5 nodes), compact serialization (TOON)
-**Scale/Scope**: Small (< 100k nodes/edges)
+**Primary Dependencies**: mcp (MCP SDK for HTTP/SSE), falkordb (client), pydantic (v2), freezegun, structlog, pyyaml
+**Storage**: FalkorDBLite (runs via Docker due to client-only v1.6.0 availability)
+**Testing**: pytest, freezegun, pytest-asyncio
+**Target Platform**: Linux/Windows/Mac server (via Docker)
+**Project Type**: mcp-server
+**Performance Goals**: <10KB context payloads, fast Cypher traversals (1-2 hops)
+**Constraints**: Absolute adherence to token frugality (TOON payload compression), required Human-In-The-Loop on destruction
+**Scale/Scope**: Small graph sizes (< 100k nodes), tightly paginated responses (max 5 nodes per page)
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- [x] **Context-Frugal by Design**: Bounded queries, pagination, and compact serialization are mandated.
-- [x] **Dynamic Pydantic Meta-Ontology**: Dynamic type registration and pre-insertion validation are required.
-- [x] **Stigmergic Confidence Web**: Organic edge creation, reinforcement, and biological decay are included.
-- [x] **Scoped Truth**: Profile-aware scoping and parallel truths are specified.
-- [x] **Explicit Semantics**: Rationale summary and prompt hash are required for AI modifications.
-- [x] **Testing & Validation Mandate**: Test-driven stigmergy, frugality assertions, and ephemeral sandboxes are mandated.
+- **Rule 1.1**: Uses FalkorDBLite and MCP protocol for context-frugal Glossary Weaver.
+- **Rule 2.2**: Uses `pydantic.create_model` to enforce strong typing dynamically.
+- **Rule 3.3/3.5**: Enforces pagination (max 5) and compact format serialization (TOON).
+- **Rule 4.3**: Enforces Stigmergic Decay using 7-day threshold.
+- **Rule 5.5**: Validated: Deleting schemas requires [APPROVAL_REQUIRED].
+- **Rule 6.3**: Validated: Testing utilizes isolated in-memory or ephemeral mock DB states.
 
 ## Project Structure
 
@@ -51,35 +51,25 @@ specs/001-mcp-prototype/
 ```text
 src/
 ├── mcp_server/
-│   ├── __init__.py
-│   ├── server.py        # FastMCP server setup
-│   ├── tools/           # MCP tools (bulk_ingest, query, etc.)
-│   └── resources/       # MCP resources
+│   ├── server.py              # Main FastMCP definition
+│   ├── tools/                 # Tool implementations (functions, ingest, query)
+│   └── formatters/            # TOON serialization logic
 ├── graph/
-│   ├── __init__.py
-│   ├── client.py        # FalkorDBLite client wrapper
-│   ├── ontology.py      # Dynamic Pydantic model generation
-│   └── stigmergy.py     # Edge creation, reinforcement, decay logic
+│   ├── client.py              # FalkorDB client lifecycle
+│   ├── schema.py              # Pydantic meta-ontology logic
+│   └── queries.py             # Bounded Cypher execution
 ├── models/
-│   ├── __init__.py
-│   ├── base.py          # Base Pydantic models
-│   └── serialization.py # TOON serialization logic
-└── utils/
-    ├── __init__.py
-    └── context.py       # Profile and scope injection
+│   └── base.py                # Core Pydantic Base Models
 
 tests/
-├── conftest.py          # Ephemeral FalkorDBLite setup
 ├── unit/
-│   ├── test_ontology.py
-│   ├── test_stigmergy.py # Uses freezegun
-│   └── test_serialization.py
-└── integration/
-    ├── test_tools.py    # Frugality assertions
-    └── test_server.py
+│   ├── test_stigmergy.py      # freezegun biological decay tests
+│   └── test_serialization.py  # Frugality bounds tests
+├── integration/
+│   └── test_function_objects_e2e.py # Complete mocked logic
 ```
 
-**Structure Decision**: Single Python project structure with clear separation of concerns: MCP server logic, graph database interactions, dynamic modeling, and utilities. Tests are separated into unit and integration, with specific focus on stigmergy and frugality.
+**Structure Decision**: A single Python package containing the MCP server layer, a graph abstraction layer (for FalkorDB), and dynamic Pydantic definitions, cleanly isolated for testability.
 
 ## Complexity Tracking
 
@@ -87,4 +77,4 @@ tests/
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| None | N/A | N/A |
+| | | |
