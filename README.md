@@ -7,7 +7,7 @@ A **stigmergic, context-frugal metadata MCP server** backed by FalkorDB, with a 
 | MCP Server | HTTP + SSE (FastMCP) | `8000` |
 | Visual Dashboard | HTTP (FastAPI + static) | `8080` |
 
-The server exposes a graph of typed metadata objects whose edges carry a living `confidence_score`. Edges are reinforced every time they are traversed and decay when left unused ÔÇö embodying the "use it or lose it" principle from ant colony stigmergy. MCP tool responses use the compact **TOON** serialisation format to keep LLM context windows small. The dashboard bypasses TOON and serves full JSON to the browser (Rule 3.6 exemption).
+The server exposes a graph of typed metadata objects whose edges carry a living `confidence_score`. Edges are reinforced every time they are traversed and decay when left unused — embodying the "use it or lose it" principle from ant colony stigmergy. MCP tool responses use the compact **TOON** serialisation format to keep LLM context windows small. The dashboard bypasses TOON and serves full JSON to the browser (Rule 3.6 exemption).
 
 ---
 
@@ -15,68 +15,68 @@ The server exposes a graph of typed metadata objects whose edges carry a living 
 
 ```
 src/
-Ôö£ÔöÇÔöÇ graph/
-Ôöé   Ôö£ÔöÇÔöÇ client.py        # FalkorDB connection singleton
-Ôöé   Ôö£ÔöÇÔöÇ ontology.py      # MetaType CRUD + health-score management
-Ôöé   Ôö£ÔöÇÔöÇ nodes.py         # ObjectNode CRUD + bulk ingest
-Ôöé   Ôö£ÔöÇÔöÇ edges.py         # StigmergicEdge CRUD, reinforce, decay, cascading wither
-Ôöé   Ôö£ÔöÇÔöÇ decay.py         # Decay runner (single edge + full-graph sweep)
-Ôöé   Ôö£ÔöÇÔöÇ query.py         # Bounded traversal (1-2 hops) + flat scan + pagination
-Ôöé   ÔööÔöÇÔöÇ schema.py        # Graph schema helpers
-Ôö£ÔöÇÔöÇ dashboard/           # Visual web dashboard API (FastAPI, port 8080)
-Ôöé   Ôö£ÔöÇÔöÇ api.py           # App factory; mounts static files; /health + /api/graph
-Ôöé   Ôö£ÔöÇÔöÇ auth.py          # JWT Bearer decode; DashboardUser dependency; 401/403
-Ôöé   Ôö£ÔöÇÔöÇ router.py        # GET /api/graph route (scoped, read-only)
-Ôöé   Ôö£ÔöÇÔöÇ graph_service.py # DashboardGraphService ÔÇö wraps query.py; 500-node cap
-Ôöé   Ôö£ÔöÇÔöÇ models.py        # Pydantic response models (GraphNodeResponse, GraphEdgeResponse ÔÇª)
-Ôöé   Ôö£ÔöÇÔöÇ config.py        # Env-var loading (DASHBOARD_JWT_SECRET, DASHBOARD_PORT ÔÇª)
-Ôöé   ÔööÔöÇÔöÇ server.py        # uvicorn entrypoint (port 8080)
-Ôö£ÔöÇÔöÇ models/
-Ôöé   Ôö£ÔöÇÔöÇ base.py          # Pydantic models for all graph entities
-Ôöé   Ôö£ÔöÇÔöÇ dynamic.py       # Runtime model factory (pydantic.create_model)
-Ôöé   ÔööÔöÇÔöÇ serialization.py # TOON compact serialiser / paginator
-Ôö£ÔöÇÔöÇ mcp_server/
-Ôöé   Ôö£ÔöÇÔöÇ app.py           # FastMCP singleton
-Ôöé   Ôö£ÔöÇÔöÇ server.py        # Entry point ÔÇô registers all tools, calls mcp.run()
-Ôöé   Ôö£ÔöÇÔöÇ formatters/
-Ôöé   Ôöé   ÔööÔöÇÔöÇ toon.py      # TOON compact format helpers
-Ôöé   ÔööÔöÇÔöÇ tools/
-Ôöé       Ôö£ÔöÇÔöÇ ingestion.py # insert_node, bulk_ingest_seed (circuit breaker)
-Ôöé       Ôö£ÔöÇÔöÇ ontology.py  # register_meta_type, list_meta_types_tool
-Ôöé       Ôö£ÔöÇÔöÇ stigmergy.py # create_stigmergic_edge, reinforce_stigmergic_edge
-Ôöé       Ôö£ÔöÇÔöÇ query.py     # query_graph
-Ôöé       Ôö£ÔöÇÔöÇ lifecycle.py # deprecate_node, branch_node_for_domain, request/confirm deletion
-Ôöé       Ôö£ÔöÇÔöÇ healing.py   # suggest_schema_heals, confirm_schema_heal
-Ôöé       ÔööÔöÇÔöÇ functions.py # create_function, query_functions, attach_function_to_nodes
-ÔööÔöÇÔöÇ utils/
-    Ôö£ÔöÇÔöÇ logging.py       # Logger + error class hierarchy
-    ÔööÔöÇÔöÇ context.py       # RequestContext (profile, domain, prompt hash, session)
+├── graph/
+│   ├── client.py        # FalkorDB connection singleton
+│   ├── ontology.py      # MetaType CRUD + health-score management
+│   ├── nodes.py         # ObjectNode CRUD + bulk ingest
+│   ├── edges.py         # StigmergicEdge CRUD, reinforce, decay, cascading wither
+│   ├── decay.py         # Decay runner (single edge + full-graph sweep)
+│   ├── query.py         # Bounded traversal (1-2 hops) + flat scan + pagination
+│   └── schema.py        # Graph schema helpers
+├── dashboard/           # Visual web dashboard API (FastAPI, port 8080)
+│   ├── api.py           # App factory; mounts static files; /health + /api/graph
+│   ├── auth.py          # JWT Bearer decode; DashboardUser dependency; 401/403
+│   ├── router.py        # GET /api/graph route (scoped, read-only)
+│   ├── graph_service.py # DashboardGraphService — wraps query.py; 500-node cap
+│   ├── models.py        # Pydantic response models (GraphNodeResponse, GraphEdgeResponse …)
+│   ├── config.py        # Env-var loading (DASHBOARD_JWT_SECRET, DASHBOARD_PORT …)
+│   └── server.py        # uvicorn entrypoint (port 8080)
+├── models/
+│   ├── base.py          # Pydantic models for all graph entities
+│   ├── dynamic.py       # Runtime model factory (pydantic.create_model)
+│   └── serialization.py # TOON compact serialiser / paginator
+├── mcp_server/
+│   ├── app.py           # FastMCP singleton
+│   ├── server.py        # Entry point – registers all tools, calls mcp.run()
+│   ├── formatters/
+│   │   └── toon.py      # TOON compact format helpers
+│   └── tools/
+│       ├── ingestion.py # insert_node, bulk_ingest_seed (circuit breaker)
+│       ├── ontology.py  # register_meta_type, list_meta_types_tool
+│       ├── stigmergy.py # create_stigmergic_edge, reinforce_stigmergic_edge
+│       ├── query.py     # query_graph
+│       ├── lifecycle.py # deprecate_node, branch_node_for_domain, request/confirm deletion
+│       ├── healing.py   # suggest_schema_heals, confirm_schema_heal
+│       └── functions.py # create_function, query_functions, attach_function_to_nodes
+└── utils/
+    ├── logging.py       # Logger + error class hierarchy
+    └── context.py       # RequestContext (profile, domain, prompt hash, session)
 
 dashboard/               # Frontend static assets (served by the dashboard API)
-Ôö£ÔöÇÔöÇ index.html           # Single-page app shell; loads Cytoscape.js 3.x from CDN
-Ôö£ÔöÇÔöÇ app.js               # Canvas render, node click/dim, filter panel, search, edge tooltips
-ÔööÔöÇÔöÇ style.css            # Full-height dark-theme layout; confidence_score edge encoding
+├── index.html           # Single-page app shell; loads Cytoscape.js 3.x from CDN
+├── app.js               # Canvas render, node click/dim, filter panel, search, edge tooltips
+└── style.css            # Full-height dark-theme layout; confidence_score edge encoding
 
 tests/
-Ôö£ÔöÇÔöÇ conftest.py
-Ôö£ÔöÇÔöÇ unit/
-Ôöé   Ôö£ÔöÇÔöÇ dashboard/
-Ôöé   Ôöé   Ôö£ÔöÇÔöÇ test_auth.py           # JWT auth (401/403, expired, missing claims)
-Ôöé   Ôöé   Ôö£ÔöÇÔöÇ test_graph_service.py  # Scope enforcement, 500-node cap, confidence clamp
-Ôöé   Ôöé   ÔööÔöÇÔöÇ test_performance.py    # SC-002 serialisation Ôëñ1.5s, SC-005 filter Ôëñ50ms
-Ôöé   Ôö£ÔöÇÔöÇ test_ontology.py
-Ôöé   Ôö£ÔöÇÔöÇ test_ingestion.py
-Ôöé   Ôö£ÔöÇÔöÇ test_stigmergy.py
-Ôöé   Ôö£ÔöÇÔöÇ test_decay.py
-Ôöé   Ôö£ÔöÇÔöÇ test_domain_scoping.py
-Ôöé   Ôö£ÔöÇÔöÇ test_function_object_model.py
-Ôöé   Ôö£ÔöÇÔöÇ test_remaining_rules.py
-Ôöé   ÔööÔöÇÔöÇ test_serialization.py
-Ôö£ÔöÇÔöÇ integration/
-Ôöé   Ôö£ÔöÇÔöÇ test_dashboard_api.py      # Scope isolation, response shape, health probe, edge fields
-Ôöé   ÔööÔöÇÔöÇ test_function_objects_e2e.py
-ÔööÔöÇÔöÇ contract/
-    ÔööÔöÇÔöÇ test_dashboard_mutations.py  # Assert zero WRITE Cypher ops from any dashboard route
+├── conftest.py
+├── unit/
+│   ├── dashboard/
+│   │   ├── test_auth.py           # JWT auth (401/403, expired, missing claims)
+│   │   ├── test_graph_service.py  # Scope enforcement, 500-node cap, confidence clamp
+│   │   └── test_performance.py    # SC-002 serialisation ≤1.5s, SC-005 filter ≤50ms
+│   ├── test_ontology.py
+│   ├── test_ingestion.py
+│   ├── test_stigmergy.py
+│   ├── test_decay.py
+│   ├── test_domain_scoping.py
+│   ├── test_function_object_model.py
+│   ├── test_remaining_rules.py
+│   └── test_serialization.py
+├── integration/
+│   ├── test_dashboard_api.py      # Scope isolation, response shape, health probe, edge fields
+│   └── test_function_objects_e2e.py
+└── contract/
+    └── test_dashboard_mutations.py  # Assert zero WRITE Cypher ops from any dashboard route
 ```
 
 ---
@@ -161,17 +161,17 @@ Open `http://localhost:8080` in a browser, paste a valid JWT, and the metadata g
 
 ## Dashboard Features
 
-### US1 ÔÇö Interactive Graph Canvas
+### US1 — Interactive Graph Canvas
 Nodes in the authenticated user's permitted scope render as a pan/zoom Cytoscape.js canvas within 3 seconds. Click a node to open a properties side-panel and dim non-adjacent nodes. Press Escape or click the background to restore.
 
-### US2 ÔÇö Stigmergic vs Structural Edges
-Stigmergic edges encode `confidence_score` as line width (1 px at 0.0 ÔåÆ 6 px at 1.0). Edges below 0.2 render dashed and de-emphasised. Structural edges are a fixed 1.5 px solid grey line. Hover any edge for a tooltip ÔÇö stigmergic tooltips include `confidence_score`, `rationale_summary`, and `last_accessed`.
+### US2 — Stigmergic vs Structural Edges
+Stigmergic edges encode `confidence_score` as line width (1 px at 0.0 ÔåÆ 6 px at 1.0). Edges below 0.2 render dashed and de-emphasised. Structural edges are a fixed 1.5 px solid grey line. Hover any edge for a tooltip — stigmergic tooltips include `confidence_score`, `rationale_summary`, and `last_accessed`.
 
-### US3 ÔÇö Filter & Search
+### US3 — Filter & Search
 Select one or more Object Types from the filter panel to restrict visible nodes. Type a `business_name` substring to dim non-matching nodes and auto-centre on the most-connected match. Refresh button resets both.
 
-### US4 ÔÇö Profile-Aware Scoped View
-Every API request requires a JWT bearing `profile_id` and `domain_scope`. Domain scoping is enforced server-side on every query ÔÇö no cross-domain data leaks are possible. Missing token ÔåÆ HTTP 401; missing claims ÔåÆ HTTP 403.
+### US4 — Profile-Aware Scoped View
+Every API request requires a JWT bearing `profile_id` and `domain_scope`. Domain scoping is enforced server-side on every query — no cross-domain data leaks are possible. Missing token ÔåÆ HTTP 401; missing claims ÔåÆ HTTP 403.
 
 ---
 
@@ -249,7 +249,7 @@ Configure an SSE connection to `http://127.0.0.1:8000`.
 }
 ```
 
-### Example: branch node for domain (Rule 5.4 ÔÇö Parallel Truths)
+### Example: branch node for domain (Rule 5.4 — Parallel Truths)
 
 ```json
 {
@@ -269,15 +269,15 @@ Configure an SSE connection to `http://127.0.0.1:8000`.
 
 | Component | Rules | Status |
 |-----------|-------|--------|
-| **Dynamic Meta-Ontology** | 2.1ÔÇô2.8 | Ô£à Complete |
-| **Context Frugality (MCP)** | 3.1ÔÇô3.5 | Ô£à Complete |
-| **Human Viewport Exception** | 3.6 | Ô£à Complete ÔÇö dashboard API exempt from TOON/compression |
-| **Stigmergic Execution** | 4.1ÔÇô4.5 | Ô£à Complete |
-| **Human Override Authority** | 4.7 | ÔÜá´©Å Ratified v1.3.0 ÔÇö implementation pending (4.6 reserved) |
-| **Profile-Aware Scoping** | 5.1ÔÇô5.5 | Ô£à Complete |
-| **Dashboard Unified Security Layer** | 5.6 | Ô£à Implemented on `001-schema-health-widget` ÔÇö pending merge to `main` |
-| **Audit Logging (Human Viewport)** | 5.7 | ÔÜá´©Å Ratified v1.2.0 ÔÇö implementation pending |
-| **Testing & Validation** | 6.1ÔÇô6.3 | Ô£à Complete |
+| **Dynamic Meta-Ontology** | 2.1–2.8 | Ô£à Complete |
+| **Context Frugality (MCP)** | 3.1–3.5 | Ô£à Complete |
+| **Human Viewport Exception** | 3.6 | Ô£à Complete — dashboard API exempt from TOON/compression |
+| **Stigmergic Execution** | 4.1–4.5 | Ô£à Complete |
+| **Human Override Authority** | 4.7 | ÔÜá´©Å Ratified v1.3.0 — implementation pending (4.6 reserved) |
+| **Profile-Aware Scoping** | 5.1–5.5 | Ô£à Complete |
+| **Dashboard Unified Security Layer** | 5.6 | Ô£à Implemented on `001-schema-health-widget` — pending merge to `main` |
+| **Audit Logging (Human Viewport)** | 5.7 | ÔÜá´©Å Ratified v1.2.0 — implementation pending |
+| **Testing & Validation** | 6.1–6.3 | Ô£à Complete |
 
 26 rules defined. Constitution v1.3.1: Rule 5.6 implemented on `001-schema-health-widget` (pending merge). Rules 4.7 and 5.7 remain pending implementation. Rule 4.6 reserved.
 
@@ -292,7 +292,7 @@ All MCP tools that return lists use the **TOON** compact format:
 - Hard cap: 10 KB per response payload
 - Paginated envelope: `{"items": [...], "total": N, "page": P, "has_more": bool}`
 
-The dashboard API is **explicitly exempt** from TOON per Rule 3.6 ÔÇö it serves full JSON to the browser.
+The dashboard API is **explicitly exempt** from TOON per Rule 3.6 — it serves full JSON to the browser.
 
 ---
 
@@ -318,7 +318,7 @@ pytest tests/ -v
 pytest tests/unit/dashboard/ tests/contract/ tests/integration/test_dashboard_api.py -v
 ```
 
-Dashboard tests use FastAPI `TestClient` with monkeypatched service methods ÔÇö no live FalkorDB required. All other tests use an ephemeral random-named FalkorDB graph torn down on completion. `freezegun` is used to simulate time passage for decay assertions.
+Dashboard tests use FastAPI `TestClient` with monkeypatched service methods — no live FalkorDB required. All other tests use an ephemeral random-named FalkorDB graph torn down on completion. `freezegun` is used to simulate time passage for decay assertions.
 
 ---
 
