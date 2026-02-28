@@ -1,55 +1,56 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change:    1.1.0 → 1.2.0
-Bump rationale:    MINOR — new Rule 5.7 (Audit Logging for Human Viewport) added to Section 5.
-                   New rule adds materially expanded, non-negotiable compliance guidance for
-                   human-originated actions via the Visual Web Dashboard; no prior rule was
-                   redefined or removed.
+Version change:    1.2.0 → 1.3.0
+Bump rationale:    MINOR — two new rules added: Rule 4.7 (Human Override Authority, Section 4) and
+                   Rule 5.6 (Dashboard Unified Security Layer, Section 5, formerly RESERVED).
+                   Both rules add materially expanded, non-negotiable compliance obligations.
+                   Rule 5.6 was previously a placeholder stub with no normative content; replacing
+                   it with substantive text is treated as an addition, not a redefinition, because
+                   there were zero obligations to redefine.
+                   Rule 4.6 is newly marked RESERVED (gap-hold, no prior mention).
 
 Modified principles:
-  - None renamed or altered.
+  - Rule 5.6: RESERVED stub → full normative rule (Dashboard Unified Security Layer).
 
 Added:
-  - Rule 5.7 — Audit Logging for Human Viewport (Section 5)
+  - Rule 4.6 — RESERVED (Section 4; gap-hold between 4.5 and 4.7)
+  - Rule 4.7 — Human Override Authority (Section 4)
+  - Rule 5.6 — Dashboard Unified Security Layer (Section 5; replaces RESERVED stub)
 
 Removed:
-  - Nothing removed.
-
-Gap note:
-  - Rule 5.6 is not yet defined. The numbering 5.7 is intentional per author request.
-    Rule 5.6 is treated as RESERVED for a future amendment.
+  - Rule 5.6 RESERVED stub (replaced by substantive rule; zero obligations lost).
 
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md   — Constitution Check gates reference rules by number;
-                                             Rule 5.7 introduces an audit-logging obligation for
-                                             any dashboard feature plan. Future plan Constitution
-                                             Check sections MUST cite Rule 5.7 when the feature
-                                             involves the Visual Web Dashboard.
-  ✅ .specify/templates/spec-template.md   — No mandatory section or structural constraint added;
-                                             existing FR/SC slots are sufficient to capture 5.7
-                                             obligations at spec time.
-  ✅ .specify/templates/tasks-template.md  — Rule 5.7 introduces a new principle-driven task
-                                             category: "Audit Logging" tasks. Future tasks.md
-                                             files for dashboard features MUST include audit-log
-                                             write, query, and atomicity tasks.
-  ⚠ README.md                              — "Specification Rules Coverage" table row for
-                                             "Profile-Aware Scoping" currently reads "5.1–5.5".
-                                             MUST be updated to "5.1–5.5, 5.7 (5.6 reserved)"
-                                             and status changed to "⚠ Partial" until Rule 5.7
-                                             is implemented in src/dashboard/.
+  ✅ .specify/templates/plan-template.md   — Constitution Check gates: Rule 4.7 gates any feature
+                                             that exposes stigmergic edge manipulation to humans.
+                                             Rule 5.6 gates ALL dashboard features — every new
+                                             dashboard route plan MUST cite Rule 5.6 compliance.
+  ✅ .specify/templates/spec-template.md   — No structural section change; FR slots sufficient.
+  ✅ .specify/templates/tasks-template.md  — Rule 4.7 introduces: decay-hold, score-reset, and
+                                             wither-cancellation task types for human override
+                                             features. Rule 5.6 introduces a mandatory
+                                             "Unified Security Layer" task in every dashboard
+                                             feature's Phase 2 (Foundational).
+  ⚠ README.md                              — Rules coverage table needs two updates:
+                                             (a) Add row: "Human Override Authority | 4.7 | ⚠ Pending"
+                                             (b) Update "Profile-Aware Scoping" row rules column
+                                             to "5.1–5.7" and note 5.6 as pending implementation.
 
 Follow-up TODOs:
-  - TODO(RULE_5_6): Rule 5.6 slot is reserved. Define or formally mark it as permanently skipped
-    in the next constitution amendment.
-  - TODO(RULE_5_7_IMPL): Rule 5.7 is constitutionally ratified but not yet implemented.
-    A feature spec + implementation task for audit logging in src/dashboard/ is required.
-    The spec Constitution Check MUST cite Rules 5.7, 5.2, and 3.6.
+  - TODO(RULE_4_7_IMPL): Rule 4.7 is constitutionally ratified but has no implementation.
+    A feature spec for Human Override Authority on the dashboard is required.
+    Gates: Rules 4.7, 5.2, 5.6, 5.7.
+  - TODO(RULE_5_6_IMPL): Rule 5.6 requires refactoring the existing dashboard auth.py into a
+    formally declared Unified Security Layer component with independent tests.
+    The 001-schema-health-widget spec already cites this rule.
+  - TODO(RULE_5_7_IMPL): Rule 5.7 remains unimplemented (carried from v1.2.0).
+  - TODO(RULE_4_6): Rule 4.6 slot is reserved. Define or formally mark permanently skipped in
+    the next amendment.
 
-Prior report (v1.0.0 → v1.1.0) preserved below for historical reference:
-  Version change:    1.0.0 → 1.1.0
-  Added:             Rule 3.6 (Human Viewport Exception, Section 3), Governance section, version footer.
-  Removed:           Nothing.
+Prior reports preserved for historical reference:
+  v1.1.0 → v1.2.0: Added Rule 5.7 (Audit Logging for Human Viewport), Rule 5.6 RESERVED stub.
+  v1.0.0 → v1.1.0: Added Rule 3.6 (Human Viewport Exception), Governance section, version footer.
 -->
 
 # **Project Constitution: Stigmergic MCP Metadata Server**
@@ -89,6 +90,8 @@ The FalkorDBLite schema operates on a dynamic meta-model, strictly enforced by a
 * **Rule 4.3 \- Biological Decay & Pruning:** The system must enforce a "decay" mechanism. If an edge's last\_accessed timestamp ages past a specific threshold, its confidence\_score degrades. If the score falls below a minimum threshold (e.g., 0.1), the edge is automatically deleted to prune AI hallucinations.  
 * **Rule 4.4 \- Immutable Provenance (Audit Trail):** Every Stigmergic Edge or MetaType modification generated by the AI must include a rationale\_summary attribute and a created\_by\_prompt\_hash. This guarantees a human-readable audit trail explaining the logic behind the AI's structural changes.  
 * **Rule 4.5 \- Cascading Wither (Orphan Handling):** If an underlying technical node is flagged as "Deprecated" or "Deleted," the MCP server must inflict an immediate and massive decay penalty on all attached stigmergic edges, severing dead branches to prevent hallucinated routing.
+* **Rule 4.6 \- RESERVED:** This rule number is reserved for a future amendment.
+* **Rule 4.7 \- Human Override Authority:** A designated human user MUST be able to manually intervene in the autonomous stigmergic mechanics of Section 4 to correct AI drift, preserve intentional relationships, or pre-empt incorrect pruning. The following overrides are mandated: (a) **Decay Hold** — a human MUST be able to apply a configurable decay moratorium to a specific stigmergic edge, preventing its `confidence_score` from decaying for a defined hold period (minimum 1 day, maximum 30 days); the moratorium is stored as a `decay_hold_until` UTC timestamp on the edge, and the autonomous decay runner (Rule 4.3) MUST skip any edge with a `decay_hold_until` value in the future; (b) **Manual Score Reset** — a human MUST be able to explicitly set a stigmergic edge's `confidence_score` to any value in [0.0, 1.0], bypassing the standard increment/decrement mechanics; (c) **Wither Cancellation** — after a Cascading Wither event (Rule 4.5), a human MUST be able to restore an individually withhered edge to its pre-wither `confidence_score` and clear the wither penalty, provided the parent node has been un-deprecated within a grace period of 48 hours. Every human override action MUST: (i) generate an audit log entry per Rule 5.7 with `action_type = MUTATION`; (ii) update the affected edge's `rationale_summary` to record the override reason and the acting `profile_id`; (iii) be constrained by the acting user's `domain_scope` per Rule 5.2 — a user MUST NOT override edges outside their permitted scope. All human override actions MUST propagate through the Unified Security Layer (Rule 5.6) and carry no exemption from JWT validation or audit logging.
 
 ## **5\. The Profile-Aware Scoping Mandate**
 
@@ -97,7 +100,7 @@ The FalkorDBLite schema operates on a dynamic meta-model, strictly enforced by a
 * **Rule 5.3 \- Bound Stigmergy:** When a user's action triggers a pheromone reinforcement (Rule 4.2) or edge creation (Rule 4.1), the system must attribute that stigmergic trace to the user's profile, ensuring cross-domain contamination is minimized.  
 * **Rule 5.4 \- Parallel Truths (Polysemy):** If the AI detects conflicting stigmergic connections with high confidence from different domain scopes (e.g., Finance vs. Marketing), it must branch the Business Term into domain-specific nodes (e.g., Active User (Finance)) rather than overwriting or deleting conflicting definitions, allowing parallel truths to co-exist securely.  
 * **Rule 5.5 \- The Supreme Court (Escalation):** While the AI can freely create and weave, any attempt to delete an Object Type, drop a MetaType definition, or destructively modify a 'Global' scoped node requires an explicit \[APPROVAL\_REQUIRED\] payload to be sent to the client, acting as a human-in-the-loop Supreme Court for irreversible structural changes.
-* **Rule 5.6 \- RESERVED:** This rule number is reserved for a future amendment.
+* **Rule 5.6 \- Dashboard Unified Security Layer:** All Visual Web Dashboard API routes MUST be protected by a single, reusable security middleware component (the "Unified Security Layer") applied at the application level, rather than implemented per-route. The Unified Security Layer MUST enforce the following checks in strict sequential order on every inbound dashboard request: (a) JWT Bearer token validation — HTTP 401 if the token is absent, malformed, or expired; (b) required claims verification (`profile_id` and `domain_scope`) — HTTP 403 if either claim is missing or empty; (c) domain scope extraction and automatic injection into all downstream Cypher query parameters, so that Rule 5.2 is satisfied structurally without per-route scope handling; (d) audit log entry creation per Rule 5.7, capturing the `profile_id`, `domain_scope`, and action metadata before any query is executed. No dashboard route MAY be registered that bypasses or partially omits any step in this chain. The Unified Security Layer MUST be implemented as an independently testable component (e.g., a FastAPI dependency or ASGI middleware class) with its own unit test suite. Tests MUST verify that a route lacking the Unified Security Layer returns the correct HTTP error and does not leak data. Any dashboard route that lacks the Unified Security Layer is itself a constitution violation and MUST be flagged as a Critical compliance defect in any spec analysis.
 * **Rule 5.7 \- Audit Logging for Human Viewport:** Any action — read or mutation — performed by a human user through the Visual Web Dashboard MUST generate an explicit, structured audit log entry that is distinct from the AI Immutable Provenance trail (Rule 4.4). Each audit entry MUST capture all of the following attributes: `profile_id` of the acting user, `domain_scope` active at the time of the action, action type (`READ` or `MUTATION`), identifier(s) of every affected node or edge, a UTC ISO-8601 timestamp, and a `human_session_id` (e.g. session token or client IP where a session identifier is not available). Dashboard-originated audit entries MUST NOT carry a `created_by_prompt_hash` attribute — that field is reserved exclusively for AI-generated stigmergic actions (Rule 4.4) and its presence in a human audit record is a compliance violation. The dashboard API layer MUST write the audit record atomically with the action it describes; if the audit record cannot be persisted, the action MUST be rejected with an appropriate HTTP error response. Audit records MUST be queryable and retained for the full operational lifetime of the Stigmergic Graph Engine to support governance review.
 
 ## **6\. The Testing & Validation Mandate**
@@ -114,4 +117,4 @@ The FalkorDBLite schema operates on a dynamic meta-model, strictly enforced by a
 * Compliance review is expected at each `/speckit.plan` invocation; violations must be justified in the Complexity Tracking table of the plan.
 * The Sync Impact Report (HTML comment at file top) MUST be updated on every amendment.
 
-**Version**: 1.2.0 | **Ratified**: 2026-02-28 | **Last Amended**: 2026-02-28
+**Version**: 1.3.0 | **Ratified**: 2026-02-28 | **Last Amended**: 2026-02-28
