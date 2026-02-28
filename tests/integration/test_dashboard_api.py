@@ -777,8 +777,14 @@ class TestHealthEndpointDegradedState:
         )
         assert response.status_code == 503
         body = response.json()
-        assert body.get("status") == "degraded"
-        assert "message" in body
+        # FastAPI wraps HTTPException detail in {"detail": {...}}
+        detail = body.get("detail", body)
+        if isinstance(detail, dict):
+            assert detail.get("status") == "degraded"
+            assert "message" in detail
+        else:
+            assert body.get("status") == "degraded"
+            assert "message" in body
 
     def test_audit_write_failure_returns_503_with_audit_status_failed(self, monkeypatch):
         """Audit write failure → 503 with audit_status:'failed' in body."""
