@@ -90,6 +90,12 @@ def _register_routes(app: FastAPI) -> None:
     except ImportError:
         pass  # router.py is created in Phase 3 (T012)
 
+    # /api/health routes — 001-schema-health-widget (T008)
+    # USL (unified_security) is already applied at the health_router constructor level
+    # (health_router.py), so no additional dependencies are needed here (Rule 5.6 / I2 fix)
+    from .health_router import health_router
+    app.include_router(health_router)
+
 
 # ---------------------------------------------------------------------------
 # Module-level app instance (used by uvicorn: src.dashboard.api:app)

@@ -465,3 +465,350 @@ class TestMetaTypesInResponse:
         data = response.json()
         node_meta_types = {n["meta_type_name"] for n in data["nodes"]}
         assert set(data["meta_types"]) == node_meta_types
+
+
+# ===========================================================================
+# 001-schema-health-widget — Health Endpoint Integration Tests
+# T010: Authentication + basic success + domain isolation + audit (SC-003,004,005)
+# T016: Refresh / sequential requests (SC-008)
+# T019: Degraded state (SC-006, FR-010)
+# ===========================================================================
+
+from unittest.mock import MagicMock
+
+
+def _health_meta_type(
+    name: str = "CustomerLoan",
+    health_score: float = 1.0,
+    domain_scope: str = "Finance",
+    type_category_value: str = "NODE",
+):
+    """Build a minimal MetaType-like mock for health service tests."""
+    from src.models.base import MetaType, TypeCategory
+    return MetaType(
+        name=name,
+        type_category=TypeCategory(type_category_value),
+        schema_definition={"type": "object", "properties": {}},
+        health_score=health_score,
+        domain_scope=domain_scope,
+    )
+
+
+def _health_client(monkeypatch, mock_meta_types=None, secret: str = _SECRET) -> "TestClient":
+    """Build a TestClient for the health endpoint with patched dependencies.
+
+    Patches:
+      - AuditService.write_audit → returns a mock audit ID (no FalkorDB call)
+      - list_meta_types → returns mock_meta_types (default: one Finance MetaType)
+    """
+    monkeypatch.setenv("DASHBOARD_JWT_SECRET", secret)
+    if mock_meta_types is None:
+        mock_meta_types = [_health_meta_type("CustomerLoan", health_score=1.0)]
+
+    monkeypatch.setattr(
+        "src.dashboard.security.AuditService.write_audit",
+        MagicMock(return_value="mock-audit-id"),
+    )
+    monkeypatch.setattr(
+        "src.dashboard.health_service.list_meta_types",
+        lambda scope: [mt for mt in mock_meta_types if mt.domain_scope == scope or mt.domain_scope == "Global"],
+    )
+    from src.dashboard.api import create_app
+    return TestClient(create_app(), raise_server_exceptions=False)
+
+
+def _health_token(domain_scope: str = "Finance", profile_id: str = "analyst_1") -> str:
+    return _token(domain_scope=domain_scope, profile_id=profile_id)
+
+
+class TestHealthEndpointAuth:
+    """T010 / SC-003: Authentication gate on GET /api/health/meta-types."""
+
+    def test_missing_token_returns_401(self, monkeypatch):
+        client = _health_client(monkeypatch)
+        response = client.get("/api/health/meta-types")
+        assert response.status_code == 401
+        assert "WWW-Authenticate" in response.headers
+
+    def test_expired_token_returns_401(self, monkeypatch):
+        client = _health_client(monkeypatch)
+        now = int(time.time())
+        expired = jwt.encode(
+            {"profile_id": "u1", "domain_scope": "Finance", "exp": now - 30},
+            _SECRET, algorithm=_ALGORITHM,
+        )
+        response = client.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {expired}"},
+        )
+        assert response.status_code == 401
+
+    def test_missing_domain_scope_returns_403(self, monkeypatch):
+        client = _health_client(monkeypatch)
+        now = int(time.time())
+        token = jwt.encode(
+            {"profile_id": "u1", "exp": now + 3600},
+            _SECRET, algorithm=_ALGORITHM,
+        )
+        response = client.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 403
+
+    def test_missing_profile_id_returns_403(self, monkeypatch):
+        client = _health_client(monkeypatch)
+        now = int(time.time())
+        token = jwt.encode(
+            {"domain_scope": "Finance", "exp": now + 3600},
+            _SECRET, algorithm=_ALGORITHM,
+        )
+        response = client.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 403
+
+    def test_post_returns_405(self, monkeypatch):
+        """GET-only endpoint — POST must return 405 Method Not Allowed."""
+        client = _health_client(monkeypatch)
+        token = _health_token()
+        response = client.post(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 405
+
+
+class TestHealthEndpointSuccess:
+    """T010 / SC-001, SC-004: Successful response shape and timing."""
+
+    def test_200_with_items(self, monkeypatch):
+        items = [
+            _health_meta_type("CustomerLoan", health_score=1.0, domain_scope="Finance"),
+            _health_meta_type("LoanProduct", health_score=0.3, domain_scope="Finance"),
+        ]
+        client = _health_client(monkeypatch, mock_meta_types=items)
+        response = client.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {_health_token()}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["items"]) == 2
+
+    def test_response_has_required_fields(self, monkeypatch):
+        items = [_health_meta_type("CustomerLoan", health_score=0.75)]
+        client = _health_client(monkeypatch, mock_meta_types=items)
+        response = client.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {_health_token()}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "items" in data
+        assert "total_available" in data
+        assert "truncated" in data
+        assert "audit_status" in data
+        assert data["audit_status"] == "ok"
+        item = data["items"][0]
+        for field in ("id", "name", "type_category", "health_score", "health_band", "domain_scope"):
+            assert field in item, f"Missing field in item: {field}"
+
+    def test_sc001_timing_under_2_seconds(self, monkeypatch):
+        """SC-001: Response must be served within 2 seconds."""
+        items = [_health_meta_type("FastType", health_score=0.9)]
+        client = _health_client(monkeypatch, mock_meta_types=items)
+        t_start = time.monotonic()
+        response = client.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {_health_token()}"},
+        )
+        elapsed = time.monotonic() - t_start
+        assert response.status_code == 200
+        assert elapsed < 2.0, f"SC-001 violated: response took {elapsed:.3f}s (limit 2s)"
+
+    def test_empty_domain_returns_empty_items(self, monkeypatch):
+        client = _health_client(monkeypatch, mock_meta_types=[])
+        response = client.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {_health_token('HR')}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["items"] == []
+        assert data["total_available"] == 0
+        assert data["truncated"] is False
+
+
+class TestHealthEndpointDomainIsolation:
+    """T010 / SC-004: Finance user sees only Finance MetaTypes."""
+
+    def test_finance_user_sees_only_finance_types(self, monkeypatch):
+        all_items = [
+            _health_meta_type("FinanceType", health_score=0.9, domain_scope="Finance"),
+            _health_meta_type("HRType", health_score=0.5, domain_scope="HR"),
+        ]
+        client = _health_client(monkeypatch, mock_meta_types=all_items)
+        response = client.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {_health_token('Finance')}"},
+        )
+        assert response.status_code == 200
+        names = [item["name"] for item in response.json()["items"]]
+        assert "FinanceType" in names
+        assert "HRType" not in names
+
+    def test_two_domain_isolation(self, monkeypatch):
+        """Finance and HR users each see only their domain."""
+        all_items = [
+            _health_meta_type("FinanceType", health_score=0.9, domain_scope="Finance"),
+            _health_meta_type("HRType", health_score=0.7, domain_scope="HR"),
+        ]
+
+        # Finance user
+        client_f = _health_client(monkeypatch, mock_meta_types=all_items)
+        resp_f = client_f.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {_health_token('Finance')}"},
+        )
+        names_f = [item["name"] for item in resp_f.json()["items"]]
+
+        # HR user — rebuild client to pick up the patched scope
+        monkeypatch.setattr(
+            "src.dashboard.health_service.list_meta_types",
+            lambda scope: [mt for mt in all_items if mt.domain_scope == scope],
+        )
+        from src.dashboard.api import create_app
+        client_hr = TestClient(create_app(), raise_server_exceptions=False)
+        resp_hr = client_hr.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {_health_token('HR')}"},
+        )
+        names_hr = [item["name"] for item in resp_hr.json()["items"]]
+
+        assert "HRType" not in names_f
+        assert "FinanceType" not in names_hr
+
+
+class TestHealthEndpointAudit:
+    """T010 / SC-005: Each request writes exactly one audit log entry."""
+
+    def test_single_request_writes_audit_once(self, monkeypatch):
+        monkeypatch.setenv("DASHBOARD_JWT_SECRET", _SECRET)
+        mock_write = MagicMock(return_value="audit-1")
+        monkeypatch.setattr("src.dashboard.security.AuditService.write_audit", mock_write)
+        monkeypatch.setattr("src.dashboard.health_service.list_meta_types", lambda s: [])
+        from src.dashboard.api import create_app
+        client = TestClient(create_app(), raise_server_exceptions=False)
+        client.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {_health_token()}"},
+        )
+        mock_write.assert_called_once()
+
+
+class TestHealthEndpointRefresh:
+    """T016 / SC-005, SC-008: Sequential requests each write their own audit entry."""
+
+    def test_two_requests_write_two_audit_entries(self, monkeypatch):
+        """SC-005: Two sequential requests → 2 audit writes."""
+        monkeypatch.setenv("DASHBOARD_JWT_SECRET", _SECRET)
+        mock_write = MagicMock(return_value="audit-id")
+        monkeypatch.setattr("src.dashboard.security.AuditService.write_audit", mock_write)
+        monkeypatch.setattr("src.dashboard.health_service.list_meta_types", lambda s: [])
+        from src.dashboard.api import create_app
+        client = TestClient(create_app(), raise_server_exceptions=False)
+        headers = {"Authorization": f"Bearer {_health_token()}"}
+        r1 = client.get("/api/health/meta-types", headers=headers)
+        r2 = client.get("/api/health/meta-types", headers=headers)
+        assert r1.status_code == 200
+        assert r2.status_code == 200
+        assert mock_write.call_count == 2
+
+    def test_sc008_two_requests_under_3_seconds(self, monkeypatch):
+        """SC-008: Two sequential requests must complete within 3 seconds combined."""
+        client = _health_client(monkeypatch, mock_meta_types=[])
+        headers = {"Authorization": f"Bearer {_health_token()}"}
+        t_start = time.monotonic()
+        r1 = client.get("/api/health/meta-types", headers=headers)
+        r2 = client.get("/api/health/meta-types", headers=headers)
+        elapsed = time.monotonic() - t_start
+        assert r1.status_code == 200
+        assert r2.status_code == 200
+        assert elapsed < 3.0, f"SC-008 violated: two requests took {elapsed:.3f}s (limit 3s)"
+
+
+class TestHealthEndpointDegradedState:
+    """T019 / SC-006, FR-010: FalkorDB failure → 503 degraded response."""
+
+    def test_connection_error_returns_503(self, monkeypatch):
+        """FR-010: ConnectionError from list_meta_types → 503."""
+        monkeypatch.setenv("DASHBOARD_JWT_SECRET", _SECRET)
+        monkeypatch.setattr("src.dashboard.security.AuditService.write_audit", MagicMock(return_value="a"))
+        monkeypatch.setattr(
+            "src.dashboard.health_service.list_meta_types",
+            MagicMock(side_effect=ConnectionError("DB down")),
+        )
+        from src.dashboard.api import create_app
+        client = TestClient(create_app(), raise_server_exceptions=False)
+        t_start = time.monotonic()
+        response = client.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {_health_token()}"},
+        )
+        elapsed = time.monotonic() - t_start
+        assert response.status_code == 503
+        assert elapsed < 5.0, f"SC-006 violated: degraded response took {elapsed:.3f}s (limit 5s)"
+
+    def test_503_body_shape(self, monkeypatch):
+        """FR-010: 503 body must contain status='degraded' and message."""
+        monkeypatch.setenv("DASHBOARD_JWT_SECRET", _SECRET)
+        monkeypatch.setattr("src.dashboard.security.AuditService.write_audit", MagicMock(return_value="a"))
+        monkeypatch.setattr(
+            "src.dashboard.health_service.list_meta_types",
+            MagicMock(side_effect=RuntimeError("unexpected")),
+        )
+        from src.dashboard.api import create_app
+        client = TestClient(create_app(), raise_server_exceptions=False)
+        response = client.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {_health_token()}"},
+        )
+        assert response.status_code == 503
+        body = response.json()
+        # FastAPI wraps HTTPException detail in {"detail": {...}}
+        detail = body.get("detail", body)
+        if isinstance(detail, dict):
+            assert detail.get("status") == "degraded"
+            assert "message" in detail
+        else:
+            assert body.get("status") == "degraded"
+            assert "message" in body
+
+    def test_audit_write_failure_returns_503_with_audit_status_failed(self, monkeypatch):
+        """Audit write failure → 503 with audit_status:'failed' in body."""
+        from fastapi import HTTPException as FE
+        monkeypatch.setenv("DASHBOARD_JWT_SECRET", _SECRET)
+        monkeypatch.setattr(
+            "src.dashboard.security.AuditService.write_audit",
+            MagicMock(side_effect=FE(
+                status_code=503,
+                detail={"status": "degraded", "message": "Audit failed", "audit_status": "failed"},
+            )),
+        )
+        monkeypatch.setattr("src.dashboard.health_service.list_meta_types", lambda s: [])
+        from src.dashboard.api import create_app
+        client = TestClient(create_app(), raise_server_exceptions=False)
+        response = client.get(
+            "/api/health/meta-types",
+            headers={"Authorization": f"Bearer {_health_token()}"},
+        )
+        assert response.status_code == 503
+        body = response.json()
+        # FastAPI wraps HTTPException detail in {"detail": {...}}
+        detail = body.get("detail", {})
+        if isinstance(detail, dict):
+            assert detail.get("audit_status") == "failed"
+        else:
+            assert body.get("audit_status") == "failed" or detail == "failed"

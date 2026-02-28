@@ -84,5 +84,48 @@
     </div>
 
     <script src="app.js"></script>
+
+    <!-- ============================================================
+         Schema Health Widget — 001-schema-health-widget
+         T011: basic panel structure (heading, empty-state, table)
+         T017: Refresh button
+         T023: truncation notice
+         ============================================================ -->
+    <section id="health-panel">
+        <div id="health-panel-header">
+            <h2>Schema Health</h2>
+            <!-- T017: Refresh button -->
+            <button id="health-refresh-btn" type="button" title="Reload health scores">&#x21bb; Refresh</button>
+        </div>
+
+        <!-- T011: Degraded banner (hidden by default) -->
+        <div id="health-degraded-banner" class="degraded-banner hidden">
+            Schema health data temporarily unavailable
+        </div>
+
+        <!-- T011: Loading indicator -->
+        <div id="health-loading" class="hidden">Loading…</div>
+
+        <!-- T011: Empty state -->
+        <div id="health-empty-state" class="hidden">No MetaTypes found in your domain.</div>
+
+        <!-- T011/T015: Health table -->
+        <table id="health-table" class="hidden">
+            <thead>
+                <tr>
+                    <th></th><!-- colour indicator -->
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody id="health-tbody"></tbody>
+        </table>
+
+        <!-- T023: Truncation notice -->
+        <p id="health-truncated-notice" class="hidden">
+            Results truncated — showing first <span id="health-cap"></span> of <span id="health-total"></span> MetaTypes
+        </p>
+    </section>
 </body>
 </html>
