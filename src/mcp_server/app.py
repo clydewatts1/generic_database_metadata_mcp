@@ -9,9 +9,9 @@ For SSE transport, the FastMCP instance is run as an ASGI app via uvicorn.
 from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP(
-    name="StigmergicMetadataServer",
+    name="GlossaryWeaver",
     instructions=(
-        "You are connected to a stigmergic metadata graph. "
+        "You are connected to a stigmergic metadata graph via GlossaryWeaver. "
         "Use the available tools to register types, ingest nodes, create relationships, "
         "and query the graph. All responses are compact TOON-serialised JSON. "
         "Payloads are capped at 10 KB. Paginate large result sets using the `page` parameter."
