@@ -7,6 +7,16 @@
 
 **Constitution Check**: This feature implements Constitution v1.4.0 (ratified 2026-03-01), which mandates Neo4j Community Edition as the graph database backend (Section 1, Tech Stack), replacing all FalkorDB/FalkorDBLite references.
 
+## Clarifications
+
+### Session 2026-03-01
+
+- Q: What is the decay threshold for stigmergic edges? → A: 30 days
+- Q: Which test isolation strategy should be used for Neo4j integration tests? → A: Per-test database creation/teardown — Real Neo4j but slower test execution
+- Q: Should the Neo4j database name be configurable via environment variable? → A: Configurable via NEO4J_DATABASE env var, default "neo4j" — Flexible, follows Neo4j conventions
+- Q: When should the Neo4j schema bootstrap (constraints/indexes creation) execute? → A: Automatically on first graph client connection, with idempotent logic — No manual setup needed
+- Q: Should the Neo4j client automatically retry failed connections for transient errors? → A: Yes, with exponential backoff (3 retries, max 5 seconds total) — Handle transient failures
+
 ## User Scenarios & Testing
 
 ### User Story 1 - Developer Runs Existing Tests Against Neo4j (Priority: P1)
@@ -21,7 +31,7 @@ A developer with Neo4j installed locally runs the existing test suite without mo
 
 1. **Given** Neo4j is running locally with connection credentials configured, **When** developer runs `pytest tests/unit/`, **Then** all unit tests pass with identical assertions
 2. **Given** Neo4j test database is empty, **When** developer runs integration tests, **Then** ephemeral test data is created, tested, and cleaned up correctly
-3. **Given** a fresh Neo4j installation, **When** bootstrap script runs, **Then** all constraints and indexes are created successfully
+3. **Given** Neo4j database has no constraints, **When** first test executes, **Then** schema bootstrap runs automatically and all constraints/indexes are created
 
 ---
 
@@ -36,8 +46,9 @@ An operator starts the dashboard server with `NEO4J_URI` configured. The dashboa
 **Acceptance Scenarios**:
 
 1. **Given** Neo4j contains metadata nodes, **When** user authenticates to dashboard, **Then** graph payload returns nodes scoped to user's `domain_scope` per Rule 5.2
-2. **Given** Neo4j is unavailable, **When** dashboard `/health` endpoint is called, **Then** HTTP 503 is returned with degraded status per FR-010 (001-schema-health-widget)
+2. **Given** Neo4j is unavailable, **When** dashboard `/health` endpoint is called, **Then** HTTP 503 is returned with degraded status per FR-008 (001-schema-health-widget)
 3. **Given** valid JWT token, **When** user requests MetaType health data, **Then** data is retrieved from Neo4j (:MetaType) nodes with correct `health_score` values
+4. **Given** Neo4j database has no schema constraints, **When** first graph query executes, **Then** constraints and indexes are created automatically before query execution
 
 ---
 
@@ -53,7 +64,7 @@ An AI agent using the MCP server creates stigmergic edges, reinforces pheromone 
 
 1. **Given** a Business Term node exists, **When** AI creates a stigmergic edge to a Technical Node, **Then** edge is persisted in Neo4j with `confidence_score=0.5`, `last_accessed=now()`, and `rationale_summary` attribute
 2. **Given** an existing stigmergic edge, **When** edge is traversed during query, **Then** `confidence_score` increments (capped at 1.0) and `last_accessed` timestamp updates
-3. **Given** a stigmergic edge with `last_accessed` older than decay threshold, **When** decay job runs, **Then** `confidence_score` decrements and edge is deleted if score < 0.1
+3. **Given** a stigmergic edge with `last_accessed` older than 30 days, **When** decay job runs, **Then** `confidence_score` decrements and edge is deleted if score < 0.1
 
 ---
 
@@ -75,10 +86,11 @@ A developer working on a machine with FalkorDB installed can still run the codeb
 
 ### Edge Cases
 
-- **What happens when Neo4j connection drops mid-query?** — Client must catch connection errors, log them, and raise appropriate HTTP 503 for dashboard endpoints or tool errors for MCP calls.
-- **How does system handle Neo4j authentication failure?** — `get_graph_client()` must validate credentials on first connection and raise RuntimeError with actionable message ("NEO4J_PASSWORD incorrect").
+- **What happens when Neo4j connection drops mid-query?** — Client must catch connection errors, retry with exponential backoff (3 attempts, max 5 seconds), log failures, and raise appropriate HTTP 503 for dashboard endpoints or tool errors for MCP calls.
+- **How does system handle Neo4j authentication failure?** — `get_graph_client()` must validate credentials on first connection (with retry logic) and raise RuntimeError with actionable message ("NEO4J_PASSWORD incorrect") if all retry attempts fail.
 - **What if Neo4j schema constraints conflict with existing data?** — Bootstrap script must check for constraint violations and provide migration guide (e.g., deduplicate nodes before applying UNIQUE constraints).
 - **How is transaction rollback handled?** — Neo4j adapter must use session transactions and ensure atomic writes (all-or-nothing for multi-node operations).
+- **What happens when retry budget is exhausted on transient errors?** — Log final failure with retry count, raise clear exception indicating Neo4j unavailable, trigger HTTP 503 degraded state for dashboard.
 
 ## Requirements
 
@@ -88,13 +100,15 @@ A developer working on a machine with FalkorDB installed can still run the codeb
 - **FR-002**: System MUST provide a `Neo4jClient` adapter class that implements the same query interface as the existing FalkorDB client (`query(cypher: str, params: dict) -> ResultSet`).
 - **FR-003**: System MUST auto-detect graph backend based on environment variables (`NEO4J_URI` presence) and fallback to FalkorDB if Neo4j is not configured.
 - **FR-004**: All Cypher queries MUST execute identically on both Neo4j and FalkorDB without syntax modifications (Cypher compatibility layer).
-- **FR-005**: System MUST create Neo4j schema constraints for `(:MetaType {name})`, `(:ObjectNode {node_id})`, and `(:HumanAuditLog {audit_id})` on bootstrap.
-- **FR-006**: System MUST create Neo4j indexes for `(:ObjectNode {domain_scope})`, `(:ObjectNode {meta_type})` for query performance.
-- **FR-007**: Test suite MUST support ephemeral Neo4j test databases (either in-memory or per-test database creation/teardown) per Rule 6.3.
+- **FR-005**: System MUST create Neo4j schema constraints for `(:MetaType {name})`, `(:ObjectNode {node_id})`, and `(:HumanAuditLog {audit_id})` automatically on first graph client connection using idempotent CREATE IF NOT EXISTS logic.
+- **FR-006**: System MUST create Neo4j indexes for `(:ObjectNode {domain_scope})`, `(:ObjectNode {meta_type})` automatically on first graph client connection using idempotent CREATE IF NOT EXISTS logic for query performance.
+- **FR-007**: Test suite MUST support ephemeral Neo4j test databases using per-test database creation/teardown strategy (real Neo4j instances for integration tests, transaction rollback within test classes) per Rule 6.3.
 - **FR-008**: Dashboard health endpoint (`/health`) MUST return HTTP 503 with `{"status": "degraded"}` if Neo4j connection fails.
 - **FR-009**: All stigmergic edge operations (creation, reinforcement, decay, pruning) MUST function identically on Neo4j as they did on FalkorDB.
 - **FR-010**: System MUST log Neo4j connection URI (excluding password) on startup for debugging.
 - **FR-011**: Migration MUST NOT require changes to existing MCP tool implementations or dashboard API routes (transparent backend swap).
+- **FR-012**: System MUST support configurable database name via `NEO4J_DATABASE` environment variable, defaulting to "neo4j" if not set.
+- **FR-013**: System MUST implement connection retry logic with exponential backoff (3 retries, max 5 seconds total) for transient Neo4j connection failures before raising errors.
 
 ### Key Entities
 
@@ -121,7 +135,7 @@ A developer working on a machine with FalkorDB installed can still run the codeb
 ### Assumptions
 
 - Neo4j Community Edition is installed locally and accessible via `bolt://` protocol.
-- User has created a Neo4j database (default name: `metadata_mcp`) and set credentials.
+- User has created a Neo4j database (default: "neo4j", configurable via `NEO4J_DATABASE` env var) and set credentials.
 - Python `neo4j` driver v5.x is compatible with project's Python 3.11+ requirement.
 - Cypher syntax used in existing queries is standard and supported by both FalkorDB and Neo4j.
 - Tests currently using FalkorDB mocks can be adapted to use Neo4j test databases or fixtures.
