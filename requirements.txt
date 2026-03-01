@@ -1,6 +1,7 @@
 mcp
 pydantic
 falkordb
+neo4j>=5.0.0
 freezegun
 uvicorn
 fastapi
