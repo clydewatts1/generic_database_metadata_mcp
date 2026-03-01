@@ -1,6 +1,6 @@
  # generic_database_metadata_mcp
 
-A **stigmergic, context-frugal metadata MCP server** backed by FalkorDB, with a **read-only visual web dashboard**.
+A **stigmergic, context-frugal metadata MCP server** backed by **FalkorDBLite** (the lightweight embedded FalkorDB graph engine), with a **read-only visual web dashboard**.
 
 | Service | Transport | Default Port |
 |---------|-----------|-------------|
@@ -8,6 +8,8 @@ A **stigmergic, context-frugal metadata MCP server** backed by FalkorDB, with a 
 | Visual Dashboard | HTTP (FastAPI + static) | `8080` |
 
 The server exposes a graph of typed metadata objects whose edges carry a living `confidence_score`. Edges are reinforced every time they are traversed and decay when left unused — embodying the "use it or lose it" principle from ant colony stigmergy. MCP tool responses use the compact **TOON** serialisation format to keep LLM context windows small. The dashboard bypasses TOON and serves full JSON to the browser (Rule 3.6 exemption).
+
+> **Implementation note**: The graph backend is **FalkorDBLite** — the lightweight embedded edition of FalkorDB that runs inside a single Docker container with no cluster overhead. The Python package is [`falkordb`](https://pypi.org/project/falkordb/); the lightweight mode is activated automatically when connecting to a standalone Docker instance.
 
 ---
 
@@ -97,14 +99,14 @@ tests/
 | Requirement | Version | Notes |
 |-------------|---------|-------|
 | Python | 3.11+ | |
-| Docker | Latest | Runs FalkorDB |
+| Docker | Latest | Runs FalkorDBLite |
 | pip | any | |
 
 ---
 
 ## Setup
 
-1. **Start FalkorDB**:
+1. **Start FalkorDBLite** (lightweight embedded FalkorDB):
    ```bash
    docker run -p 6379:6379 -it --rm falkordb/falkordb
    ```
@@ -123,7 +125,7 @@ tests/
    pip install -r requirements.txt
    ```
 
-3. **Bootstrap FalkorDB indices** (first run only):
+3. **Bootstrap FalkorDBLite indices** (first run only):
    ```bash
    python scripts/bootstrap_indices.py
    ```
@@ -140,7 +142,7 @@ python -m src.mcp_server.server
 
 Expected log output:
 ```
-INFO: src.graph.client: Connecting to FalkorDB at localhost:6379
+INFO: src.graph.client: Connecting to FalkorDBLite at localhost:6379
 INFO: src.mcp_server.server: [FastMCP] MCP tools registered: 17
 INFO: uvicorn.server: Uvicorn running on http://127.0.0.1:8000
 ```
@@ -165,8 +167,8 @@ Open `http://localhost:8080` in a browser, paste a valid JWT, and the metadata g
 | `DASHBOARD_JWT_SECRET` | *(required)* | HS256 secret for JWT Bearer token validation |
 | `DASHBOARD_PORT` | `8080` | Port the dashboard server listens on |
 | `DASHBOARD_NODE_LIMIT` | `500` | Max nodes returned per scoped payload |
-| `FALKORDB_HOST` | `localhost` | FalkorDB hostname |
-| `FALKORDB_PORT` | `6379` | FalkorDB port |
+| `FALKORDB_HOST` | `localhost` | FalkorDBLite hostname |
+| `FALKORDB_PORT` | `6379` | FalkorDBLite port |
 
 ---
 
@@ -195,6 +197,200 @@ A collapsible health panel shows every MetaType in the user's scope sorted by `h
 **API endpoint**: `GET /api/health/meta-types`
 **Auth**: JWT Bearer (same token as graph canvas)
 **Response fields**: `items[]`, `total_available`, `truncated`, `audit_status`
+
+---
+
+## Dashboard Usage Guide
+
+### Step 1 — Start all services
+
+```bash
+# Terminal 1: start FalkorDBLite
+docker run -p 6379:6379 -it --rm falkordb/falkordb
+
+# Terminal 2: start the MCP server (port 8000)
+python -m src.mcp_server.server
+
+# Terminal 3: start the visual dashboard (port 8080)
+export DASHBOARD_JWT_SECRET="my-super-secret"
+python -m src.dashboard.server
+```
+
+### Step 2 — Generate a JWT
+
+The dashboard requires a signed HS256 JWT carrying two claims: `profile_id` and `domain_scope`.
+
+```python
+import jwt, datetime
+
+token = jwt.encode(
+    {
+        "profile_id": "user_alice",
+        "domain_scope": "Finance",
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=8),
+    },
+    "my-super-secret",
+    algorithm="HS256",
+)
+print(token)
+```
+
+### Step 3 — Open the dashboard
+
+1. Navigate to `http://localhost:8080` in any modern browser.
+2. A **JWT login banner** appears at the top of the page.
+3. Paste the token from Step 2 (without the `Bearer ` prefix) into the input field and click **Connect**.
+4. The graph canvas loads all nodes within the `domain_scope` of your token.
+
+### Step 4 — Explore the graph
+
+| Action | How |
+|--------|-----|
+| **Pan** | Click and drag the canvas background |
+| **Zoom** | Scroll wheel or pinch gesture |
+| **Select a node** | Single-click — opens the properties side-panel (right) and dims unrelated nodes |
+| **Dismiss selection** | Press `Escape` or click the canvas background |
+| **Hover an edge** | Shows a tooltip with `confidence_score`, `rationale_summary`, and `last_accessed` |
+| **Refresh** | Click the ↻ **Refresh** button in the header to reload from the server |
+
+### Step 5 — Filter and search
+
+- **Object Type filter** (left panel): select one or more types from the multi-select list to show only matching nodes. Hold `Ctrl`/`Cmd` to select multiple. Click **Clear filter** to reset.
+- **Search** (left panel): type any substring of a `business_name` to dim non-matching nodes. The canvas auto-centres on the most-connected match.
+
+### Step 6 — Schema Health panel
+
+The **Schema Health** panel (bottom of page) lists every MetaType sorted by `health_score` (lowest first):
+
+| Colour | Score range | Meaning |
+|--------|-------------|---------|
+| 🟢 Green | ≥ 0.8 | Healthy |
+| 🟡 Amber | 0.5 – 0.79 | Degraded |
+| 🔴 Red | < 0.5 | Unhealthy — consider running `suggest_schema_heals` via MCP |
+
+Click **↻ Refresh** inside the panel to reload health scores without reloading the graph.
+
+If the health service is temporarily unavailable, a yellow **"Schema health data temporarily unavailable"** banner is shown. The graph canvas continues to operate normally.
+
+### Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---------|-------------|-----|
+| Login banner not dismissing | Token is malformed or expired | Re-generate the JWT (Step 2) |
+| `domain_scope` / `profile_id` error banner | JWT missing required claims | Ensure both claims are present in the payload |
+| `Graph engine unavailable` warning | MCP server or FalkorDBLite is down | Check FalkorDBLite first (`docker ps`, port 6379), then restart the MCP server |
+| Showing first 500 nodes message | More than 500 nodes in scope | Apply an Object Type filter to narrow results |
+
+---
+
+## Configuring the MCP Server in LLM Environments
+
+The MCP server exposes an **SSE endpoint** at `http://127.0.0.1:8000` (or whichever host/port you configure). The examples below show how to wire it up in three popular AI environments.
+
+---
+
+### Claude Desktop
+
+Claude Desktop reads MCP server configuration from a JSON file.
+
+**Config file location:**
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+**Option A — SSE transport (recommended, server must already be running):**
+
+```json
+{
+  "mcpServers": {
+    "generic-db-metadata": {
+      "url": "http://127.0.0.1:8000/sse"
+    }
+  }
+}
+```
+
+**Option B — stdio transport (Claude Desktop spawns the process automatically):**
+
+```json
+{
+  "mcpServers": {
+    "generic-db-metadata": {
+      "command": "python",
+      "args": ["-m", "src.mcp_server.server"],
+      "cwd": "/absolute/path/to/generic_database_metadata_mcp",
+      "env": {
+        "FALKORDB_HOST": "localhost",
+        "FALKORDB_PORT": "6379"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop after saving the file. The tool list will appear in the **Tools** section of a new conversation.
+
+---
+
+### GitHub Copilot (VS Code)
+
+GitHub Copilot in VS Code supports MCP servers via workspace or user settings.
+
+**Option A — Workspace-level config (`.vscode/mcp.json`):**
+
+```json
+{
+  "servers": {
+    "generic-db-metadata": {
+      "type": "sse",
+      "url": "http://127.0.0.1:8000/sse"
+    }
+  }
+}
+```
+
+**Option B — VS Code settings (`settings.json`):**
+
+```json
+{
+  "github.copilot.chat.mcp.servers": {
+    "generic-db-metadata": {
+      "type": "sse",
+      "url": "http://127.0.0.1:8000/sse"
+    }
+  }
+}
+```
+
+After saving, open the **Copilot Chat** panel (`Ctrl+Shift+I` / `Cmd+Shift+I`) and the server's tools will be listed under the MCP section. Start the MCP server before opening Copilot Chat.
+
+---
+
+### Gemini CLI
+
+[Gemini CLI](https://github.com/google-gemini/gemini-cli) reads MCP server configuration from `~/.gemini/settings.json`.
+
+```json
+{
+  "mcpServers": {
+    "generic-db-metadata": {
+      "httpUrl": "http://127.0.0.1:8000/sse",
+      "timeout": 30000
+    }
+  }
+}
+```
+
+Start the MCP server, then run:
+
+```bash
+gemini
+```
+
+The tools registered by this server will be available automatically within the Gemini CLI session. You can verify they are loaded with:
+
+```
+/tools
+```
 
 ---
 
