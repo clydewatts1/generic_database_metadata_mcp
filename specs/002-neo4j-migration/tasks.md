@@ -112,16 +112,16 @@
 
 ### Dashboard API Tests
 
-- [ ] T031 [US2] Create integration test in tests/integration/test_dashboard_api.py: POST /authenticate with JWT, verify 200 response
-- [ ] T032 [US2] Create integration test in tests/integration/test_dashboard_api.py: GET /dashboard/graph with valid JWT, verify nodes/edges returned with correct structure
-- [ ] T033 [US2] Create integration test in tests/integration/test_dashboard_api.py: GET /dashboard/graph with domain_scope='Finance', verify only Finance + Global nodes returned per Rule 5.2
-- [ ] T034 [US2] Create integration test in tests/integration/test_dashboard_api.py: GET /dashboard/health, verify MetaType health_score values match database
-- [ ] T035 [US2] Create integration test in tests/integration/test_dashboard_api.py: Simulate Neo4j unavailable (stop server or corrupt URI), GET /health, verify HTTP 503 + degraded status per FR-008
+- [x] T031 [US2] Create integration test in tests/integration/test_dashboard_api.py: POST /authenticate with JWT, verify 200 response
+- [x] T032 [US2] Create integration test in tests/integration/test_dashboard_api.py: GET /dashboard/graph with valid JWT, verify nodes/edges returned with correct structure
+- [x] T033 [US2] Create integration test in tests/integration/test_dashboard_api.py: GET /dashboard/graph with domain_scope='Finance', verify only Finance + Global nodes returned per Rule 5.2
+- [x] T034 [US2] Create integration test in tests/integration/test_dashboard_api.py: GET /dashboard/health, verify MetaType health_score values match database
+- [x] T035 [US2] Create integration test in tests/integration/test_dashboard_api.py: Simulate Neo4j unavailable (stop server or corrupt URI), GET /health, verify HTTP 503 + degraded status per FR-008
 
 ### Dashboard Degraded State
 
 - [x] T036 [P] [US2] Verify src/dashboard/health_router.py returns HTTP 503 with degraded status when Neo4j connection fails (existing error handling logic works)
-- [ ] T037 [US2] Create integration test in tests/integration/test_dashboard_api.py: Corrupt NEO4J_PASSWORD, start dashboard, verify /health returns 503 immediately (retry exhausted)
+- [x] T037 [US2] Create integration test in tests/integration/test_dashboard_api.py: Corrupt NEO4J_PASSWORD, start dashboard, verify /health returns 503 immediately (retry exhausted)
 
 **Checkpoint**: User Story 2 complete - dashboard fully functional against Neo4j. Ready for MCP server integration (Story 3).
 
@@ -143,20 +143,20 @@
 
 ### Stigmergic Operations
 
-- [ ] T038 [P] [US3] Create integration test in tests/integration/test_stigmergic_operations.py: Create stigmergic edge via MCP tool (or direct query), verify persisted with confidence_score=0.5, last_accessed=now(), rationale_summary attribute
-- [ ] T039 [P] [US3] Create integration test in tests/integration/test_stigmergic_operations.py: Traverse stigmergic edge, verify confidence_score increments and last_accessed updates (atomic transaction)
-- [ ] T040 [P] [US3] Create integration test in tests/integration/test_stigmergic_operations.py: Confidence score capped at 1.0 (increment when already at 1.0 remains at 1.0)
-- [ ] T041 [P] [US3] Create integration test in tests/integration/test_stigmergic_operations.py: Mock time advance (freezegun) to 31 days after last_accessed, run decay job, verify confidence decremented and pruned if < 0.1
+- [x] T038 [P] [US3] Create integration test in tests/integration/test_stigmergic_operations.py: Create stigmergic edge via MCP tool (or direct query), verify persisted with confidence_score=0.5, last_accessed=now(), rationale_summary attribute
+- [x] T039 [P] [US3] Create integration test in tests/integration/test_stigmergic_operations.py: Traverse stigmergic edge, verify confidence_score increments and last_accessed updates (atomic transaction)
+- [x] T040 [P] [US3] Create integration test in tests/integration/test_stigmergic_operations.py: Confidence score capped at 1.0 (increment when already at 1.0 remains at 1.0)
+- [x] T041 [P] [US3] Create integration test in tests/integration/test_stigmergic_operations.py: Mock time advance (freezegun) to 31 days after last_accessed, run decay job, verify confidence decremented and pruned if < 0.1
 
 ### Decay & Pruning
 
-- [ ] T042 [P] [US3] Implement or verify stigmergic decay logic in src/graph/query.py or existing decay job: query edges with last_accessed > 30 days ago, decrement confidence_score by fixed amount (e.g., 0.1), delete if score < 0.1, use transaction for atomicity
-- [ ] T043 [US3] Create integration test in tests/integration/test_stigmergic_decay.py: Setup 100 stigmergic edges with varying ages and scores, run decay job, verify only old edges (>30 days) affected and correct edges pruned per FR-009, spec User Story 3
+- [x] T042 [P] [US3] Implement or verify stigmergic decay logic in src/graph/query.py or existing decay job: query edges with last_accessed > 30 days ago, decrement confidence_score by fixed amount (e.g., 0.1), delete if score < 0.1, use transaction for atomicity
+- [x] T043 [US3] Create integration test in tests/integration/test_stigmergic_decay.py: Setup 100 stigmergic edges with varying ages and scores, run decay job, verify only old edges (>30 days) affected and correct edges pruned per FR-009, spec User Story 3
 
 ### Comparison to FalkorDB
 
-- [ ] T044 [US3] Compare MCP tool behavior: create identical edge on both FalkorDB and Neo4j, verify attributes match
-- [ ] T045 [US3] Compare decay behavior: initialize identical edge set on both backends, advance time 31+ days, run decay on both, verify outcome identical (Neo4j matches FalkorDB exactly) per FR-009
+- [x] T044 [US3] Compare MCP tool behavior: create identical edge on both FalkorDB and Neo4j, verify attributes match
+- [x] T045 [US3] Compare decay behavior: initialize identical edge set on both backends, advance time 31+ days, run decay on both, verify outcome identical (Neo4j matches FalkorDB exactly) per FR-009
 
 **Checkpoint**: User Story 3 complete - stigmergic operations fully functional. Ready for backward compatibility support (Story 4).
 
@@ -176,16 +176,16 @@
 
 ### Backend Detection
 
-- [ ] T046 [P] [US4] Create integration test in tests/integration/test_backend_detection.py: NEO4J_URI not set, FalkorDB running on localhost:6379, get_graph() returns FalkorDB client, query executes successfully
-- [ ] T047 [P] [US4] Create integration test in tests/integration/test_backend_detection.py: Both NEO4J_URI and FalkorDB available, verify Neo4j client instantiated (precedence to Neo4j) per FR-003, spec User Story 4
-- [ ] T048 [P] [US4] Create integration test in tests/integration/test_backend_detection.py: Neither Neo4j nor FalkorDB available, get_graph() raises RuntimeError with setup instructions (where to download/configure each backend)
-- [ ] T049 [US4] Unset NEO4J_URI, start FalkorDB container, execute pytest tests/unit/ tests/contract/ tests/integration/, verify 100% pass rate using FalkorDB backend unchanged
+- [x] T046 [P] [US4] Create integration test in tests/integration/test_backend_detection.py: NEO4J_URI not set, FalkorDB running on localhost:6379, get_graph() returns FalkorDB client, query executes successfully
+- [x] T047 [P] [US4] Create integration test in tests/integration/test_backend_detection.py: Both NEO4J_URI and FalkorDB available, verify Neo4j client instantiated (precedence to Neo4j) per FR-003, spec User Story 4
+- [x] T048 [P] [US4] Create integration test in tests/integration/test_backend_detection.py: Neither Neo4j nor FalkorDB available, get_graph() raises RuntimeError with setup instructions (where to download/configure each backend)
+- [x] T049 [US4] Unset NEO4J_URI, start FalkorDB container, execute pytest tests/unit/ tests/contract/ tests/integration/, verify 100% pass rate using FalkorDB backend unchanged
 
 ### Backward Compatibility Verification
 
-- [ ] T050 [P] [US4] Verify existing FalkorDB client import path src/graph/client.py still works without changes (get_graph() returns either Neo4j or FalkorDB transparently)
-- [ ] T051 [US4] Verify all existing MCP tools work with both backends (tools call get_graph() which returns compatible interface)
-- [ ] T052 [US4] Verify all existing dashboard code works with both backends (dashboard calls execute_query which routes to correct backend)
+- [x] T050 [P] [US4] Verify existing FalkorDB client import path src/graph/client.py still works without changes (get_graph() returns either Neo4j or FalkorDB transparently)
+- [x] T051 [US4] Verify all existing MCP tools work with both backends (tools call get_graph() which returns compatible interface)
+- [x] T052 [US4] Verify all existing dashboard code works with both backends (dashboard calls execute_query which routes to correct backend)
 
 **Checkpoint**: User Story 4 complete - backward compatibility fully supported. All four user stories implemented independently and tested.
 
