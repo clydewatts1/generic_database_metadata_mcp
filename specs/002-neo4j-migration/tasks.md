@@ -67,24 +67,24 @@
 
 ### Unit Tests
 
-- [ ] T015 [P] [US1] Verify unit tests in tests/unit/dashboard/ work without modification against mocked Neo4j adapter
-- [ ] T016 [P] [US1] Verify unit tests in tests/unit/graph/ work without modification against mocked queries
-- [ ] T017 [P] [US1] Execute unit test suite with pytest and confirm 100% pass rate
+- [x] T015 [P] [US1] Verify unit tests in tests/unit/dashboard/ work without modification against mocked Neo4j adapter
+- [x] T016 [P] [US1] Verify unit tests in tests/unit/graph/ work without modification against mocked queries
+- [x] T017 [P] [US1] Execute unit test suite with pytest and confirm 100% pass rate
 
 ### Contract Tests
 
-- [ ] T018 [P] [US1] Verify contract tests in tests/contract/test_dashboard_mutations.py work without modification (FalkorDB compat layer)
-- [ ] T019 [P] [US1] Verify contract tests in tests/contract/test_health_mutations.py work without modification
-- [ ] T020 [US1] Execute contract test suite with pytest and confirm 100% pass rate
+- [x] T018 [P] [US1] Verify contract tests in tests/contract/test_dashboard_mutations.py work without modification (FalkorDB compat layer)
+- [x] T019 [P] [US1] Verify contract tests in tests/contract/test_health_mutations.py work without modification
+- [x] T020 [US1] Execute contract test suite with pytest and confirm 100% pass rate
 
 ### Integration Tests
 
-- [ ] T021 [P] [US1] Create integration test in tests/integration/test_neo4j_adapter.py: verify Neo4jDriver connects and executes simple query
-- [ ] T022 [P] [US1] Create integration test in tests/integration/test_neo4j_adapter.py: verify schema bootstrap is automatic and idempotent on first test
-- [ ] T023 [P] [US1] Create integration test in tests/integration/test_neo4j_adapter.py: verify test database is ephemeral (cleanup on test end)
-- [ ] T024 [P] [US1] Create integration test in tests/integration/test_function_objects_e2e.py: verify ObjectNode CRUD operations work identically to FalkorDB
-- [ ] T025 [P] [US1] Create integration test in tests/integration/test_stigmergic_e2e.py: verify stigmergic edge creation works identically to FalkorDB
-- [ ] T026 [US1] Execute full integration test suite with pytest against Neo4j and confirm 100% pass rate
+- [x] T021 [P] [US1] Create integration test in tests/integration/test_neo4j_adapter.py: verify Neo4jDriver connects and executes simple query
+- [x] T022 [P] [US1] Create integration test in tests/integration/test_neo4j_adapter.py: verify schema bootstrap is automatic and idempotent on first test
+- [x] T023 [P] [US1] Create integration test in tests/integration/test_neo4j_adapter.py: verify test database is ephemeral (cleanup on test end)
+- [x] T024 [P] [US1] Create integration test in tests/integration/test_function_objects_e2e.py: verify ObjectNode CRUD operations work identically to FalkorDB
+- [x] T025 [P] [US1] Create integration test in tests/integration/test_stigmergic_e2e.py: verify stigmergic edge creation works identically to FalkorDB
+- [x] T026 [US1] Execute full integration test suite with pytest against Neo4j and confirm 100% pass rate
 
 **Checkpoint**: User Story 1 complete - all tests pass. Foundation proven. Ready for dashboard and MCP integration (Stories 2-3).
 
@@ -105,10 +105,10 @@
 
 ### Backend Compatibility
 
-- [ ] T027 [P] [US2] Verify src/dashboard/graph_service.py._fetch_nodes() works against Neo4j without modification (uses generic execute_query interface)
-- [ ] T028 [P] [US2] Verify src/dashboard/graph_service.py._fetch_stigmergic_edges() works against Neo4j without modification
-- [ ] T029 [P] [US2] Verify src/dashboard/graph_service.py._fetch_structural_edges() works against Neo4j without modification (MATCH relationships query)
-- [ ] T030 [P] [US2] Verify domain_scope filtering in where clauses works identically on Neo4j (WHERE n.domain_scope = $ds logic)
+- [x] T027 [P] [US2] Verify src/dashboard/graph_service.py._fetch_nodes() works against Neo4j without modification (uses generic execute_query interface)
+- [x] T028 [P] [US2] Verify src/dashboard/graph_service.py._fetch_stigmergic_edges() works against Neo4j without modification
+- [x] T029 [P] [US2] Verify src/dashboard/graph_service.py._fetch_structural_edges() works against Neo4j without modification (MATCH relationships query)
+- [x] T030 [P] [US2] Verify domain_scope filtering in where clauses works identically on Neo4j (WHERE n.domain_scope = $ds logic)
 
 ### Dashboard API Tests
 
@@ -120,7 +120,7 @@
 
 ### Dashboard Degraded State
 
-- [ ] T036 [P] [US2] Verify src/dashboard/health_router.py returns HTTP 503 with degraded status when Neo4j connection fails (existing error handling logic works)
+- [x] T036 [P] [US2] Verify src/dashboard/health_router.py returns HTTP 503 with degraded status when Neo4j connection fails (existing error handling logic works)
 - [ ] T037 [US2] Create integration test in tests/integration/test_dashboard_api.py: Corrupt NEO4J_PASSWORD, start dashboard, verify /health returns 503 immediately (retry exhausted)
 
 **Checkpoint**: User Story 2 complete - dashboard fully functional against Neo4j. Ready for MCP server integration (Story 3).
