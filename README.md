@@ -1,4 +1,4 @@
-# generic_database_metadata_mcp
+ # generic_database_metadata_mcp
 
 A **stigmergic, context-frugal metadata MCP server** backed by FalkorDB, with a **read-only visual web dashboard**.
 
