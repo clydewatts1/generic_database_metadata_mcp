@@ -1,15 +1,22 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change:    1.3.0 ÔåÆ 1.3.1
-Bump rationale:    PATCH — Sync Impact Report housekeeping only. No rule text added, removed, or
-                   redefined. Changes: (a) README.md coverage table updates from v1.3.0 Sync Report
-                   are confirmed as completed (ÔÜá ÔåÆ Ô£à); (b) TODO(RULE_5_6_IMPL) is resolved in
-                   feature branch `001-schema-health-widget` — implementation complete, pending
-                   merge to main; (c) Last Amended date confirmed as 2026-02-28.
+Version change:    1.3.1 ÔåÆ 1.4.0
+Bump rationale:    MINOR — Technology stack substitution. FalkorDB/FalkorDBLite references replaced
+                   with Neo4j Community Edition as the graph database backend. This constitutes a
+                   material change to the technical foundation (Section 1) and test infrastructure
+                   (Rule 6.3), warranting a MINOR version increment. No governance rules added,
+                   removed, or redefined. All stigmergic mechanics, profile-scoping, and security
+                   mandates remain semantically intact.
 
 Modified principles:
-  - None.
+  - Section 1 (Core Identity & Architecture): Tech Stack clause updated —
+    "FalkorDBLite for the embedded, lightweight graph database" replaced with
+    "Neo4j Community Edition for the local graph database."
+  - Rule 2.1–2.8 context: References to "FalkorDBLite schema" generalized to "Neo4j graph schema."
+  - Rule 6.3 (Ephemeral Sandbox): Test isolation clause updated —
+    "ephemeral, in-memory instances of FalkorDBLite" replaced with
+    "ephemeral test databases in Neo4j or in-memory graph fixtures."
 
 Added sections:
   - None.
@@ -18,20 +25,20 @@ Removed sections:
   - None.
 
 Templates requiring updates:
-  Ô£à .specify/templates/plan-template.md   — No change required at this version.
-  Ô£à .specify/templates/spec-template.md   — No change required at this version.
-  Ô£à .specify/templates/tasks-template.md  — No change required at this version.
-  Ô£à README.md                              — Rules coverage table updated: Rule 5.6 marked
-                                             Ô£à Implemented on 001-schema-health-widget
-                                             (pending merge to main). Summary line updated.
+  ÔÜá .specify/templates/plan-template.md   — Update Constitution Check examples to reference Neo4j.
+  ÔÜá .specify/templates/spec-template.md   — Update Data Model sections to reflect Neo4j constraints.
+  ÔÜá README.md                              — Update Tech Stack section and graph database setup
+                                             instructions to reference Neo4j instead of FalkorDB.
+  Ô£à .specify/templates/tasks-template.md  — No change required (backend-agnostic).
 
-Resolved TODOs:
-  - RESOLVED(RULE_5_6_IMPL): Rule 5.6 — Dashboard Unified Security Layer — is fully implemented
-    in feature branch `001-schema-health-widget` (commit 810c20c). Implementation includes:
-    `src/dashboard/security.py` (derive_session_id, AuditService.write_audit, unified_security),
-    `src/dashboard/health_router.py` (APIRouter with USL in constructor dependencies),
-    `tests/unit/dashboard/test_unified_security.py` (13 tests, all passing).
-    Status: merged to main pending PR approval.
+Implementation impacts:
+  - src/graph/client.py: Adapter layer required to support both FalkorDB (if present) and Neo4j.
+  - src/graph/neo4j_client.py: New module providing Neo4j driver integration and FalkorDB-compatible
+    query interface.
+  - requirements.txt: Add `neo4j>=5.0.0` dependency.
+  - tests/: All integration and contract tests must be verified against Neo4j backend.
+  - Bootstrap scripts: Schema initialization (constraints, indexes) must be adapted for Neo4j's
+    CREATE CONSTRAINT and CREATE INDEX syntax.
 
 Deferred TODOs (carried forward):
   - TODO(RULE_4_7_IMPL): Rule 4.7 is constitutionally ratified but has no implementation.
@@ -45,6 +52,7 @@ Deferred TODOs (carried forward):
     the next amendment.
 
 Prior reports preserved for historical reference:
+  v1.3.0 ÔåÆ v1.3.1: Sync Impact Report housekeeping, RULE_5_6_IMPL resolved on 001-schema-health-widget.
   v1.2.0 ÔåÆ v1.3.0: Added Rule 4.6 RESERVED, Rule 4.7 Human Override Authority, Rule 5.6 Dashboard
                    Unified Security Layer (replacing RESERVED stub). README.md ÔÜá pending updates.
   v1.1.0 ÔåÆ v1.2.0: Added Rule 5.7 (Audit Logging for Human Viewport), Rule 5.6 RESERVED stub.
@@ -56,16 +64,16 @@ Prior reports preserved for historical reference:
 ## **1\. Core Identity & Architecture**
 
 * **Purpose:** Build a lightweight, context-frugal Model Context Protocol (MCP) server that mimics Teradata Metadata Services, specifically functioning as a "Glossary Weaver."  
-* **Tech Stack:** Python, mcp library (MCP Python SDK - mcp -- Run as SSE not STDIO), and FalkorDBLite for the embedded, lightweight graph database.  
+* **Tech Stack:** Python, mcp library (MCP Python SDK - mcp -- Run as SSE not STDIO), and Neo4j Community Edition for the local graph database.  
 * **Core Paradigm:** The system must be **Stigmergic** (the AI leaves "pheromone traces" and semantic connections in the graph environment for future interactions) and **Context Frugal** (never overwhelm the LLM context window).
 
 ## **2\. The Dynamic Pydantic Meta-Ontology**
 
-The FalkorDBLite schema operates on a dynamic meta-model, strictly enforced by a runtime Pydantic registry:
+The Neo4j graph schema operates on a dynamic meta-model, strictly enforced by a runtime Pydantic registry:
 
 * **Rule 2.1 \- Dynamic Type Registration:** The MCP server must maintain an internal, dynamic registry of Object Types and Edge Types. The AI is permitted to define new types on the fly (e.g., creating a Dashboard type with specific required fields).  
 * **Rule 2.2 \- Pydantic Generation (create\_model):** When a new Object Type is defined, the server must use pydantic.create\_model to generate a strict validation schema in memory, and persist the schema definition in the graph (e.g., using a (:MetaType) node) so it survives server restarts.  
-* **Rule 2.3 \- Pre-Insertion Validation:** All metadata nodes instantiated by the AI must be validated against their dynamically generated Pydantic model *before* being inserted into FalkorDBLite. If attributes are missing or incorrectly typed, the MCP tool must reject the request and return the validation error to the AI.  
+* **Rule 2.3 \- Pre-Insertion Validation:** All metadata nodes instantiated by the AI must be validated against their dynamically generated Pydantic model *before* being inserted into the Neo4j graph. If attributes are missing or incorrectly typed, the MCP tool must reject the request and return the validation error to the AI.  
 * **Rule 2.4 \- Structural vs. Flow Relationships:** Edge Types must clearly distinguish between structural hierarchies (e.g., Table \[:CONTAINS\] Column) and data lineage/flow (e.g., Table\_A \[:POPULATES\] Table\_B).  
 * **Rule 2.5 \- Function Objects (First-Class Transformations):** ETL operations or logic must not be hidden inside edge properties. They must be represented as distinct Function Objects within the graph.  
 * **Rule 2.6 \- Stigmergic Schema Health:** Every (:MetaType) definition node possesses a health\_score (defaulting to 1.0). When an instantiation or relationship creation fails Pydantic validation, the system must automatically decrement the health\_score of the offending MetaType.  
@@ -105,7 +113,7 @@ The FalkorDBLite schema operates on a dynamic meta-model, strictly enforced by a
 
 * **Rule 6.1 \- Test-Driven Stigmergy:** All stigmergic mechanics (e.g., Biological Decay, Schema Health, Cascading Wither) must have dedicated unit tests. The AI must write tests that explicitly mock time progression (e.g., using freezegun) to prove that confidence scores decay and dead links are pruned as expected.  
 * **Rule 6.2 \- Frugality Assertion:** Every read-focused MCP tool must include tests that assert the maximum payload size or node count. Tests must explicitly fail if a query returns raw, uncompressed topologies or exceeds the pagination threshold.  
-* **Rule 6.3 \- Ephemeral Sandbox:** All tests must be completely isolated using ephemeral, in-memory instances of FalkorDBLite. The AI is strictly prohibited from writing tests that rely on or mutate an external, persistent graph state.
+* **Rule 6.3 \- Ephemeral Sandbox:** All tests must be completely isolated using ephemeral test databases in Neo4j or in-memory graph fixtures. The AI is strictly prohibited from writing tests that rely on or mutate an external, persistent graph state.
 
 ## **7\. Governance**
 
@@ -115,4 +123,4 @@ The FalkorDBLite schema operates on a dynamic meta-model, strictly enforced by a
 * Compliance review is expected at each `/speckit.plan` invocation; violations must be justified in the Complexity Tracking table of the plan.
 * The Sync Impact Report (HTML comment at file top) MUST be updated on every amendment.
 
-**Version**: 1.3.1 | **Ratified**: 2026-02-28 | **Last Amended**: 2026-02-28
+**Version**: 1.4.0 | **Ratified**: 2026-02-28 | **Last Amended**: 2026-03-01
