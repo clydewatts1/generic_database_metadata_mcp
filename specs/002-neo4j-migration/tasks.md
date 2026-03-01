@@ -13,9 +13,9 @@
 
 **Purpose**: Install dependencies and create boilerplate structure
 
-- [ ] T001 Install neo4j>=5.0.0 package into requirements.txt
-- [ ] T002 Create Neo4j adapter boilerplate in src/graph/neo4j_client.py (empty classes: Neo4jClient, Neo4jGraph, Neo4jResultSet)
-- [ ] T003 Create conftest.py boilerplate in tests/ for Neo4j database fixtures
+- [x] T001 Install neo4j>=5.0.0 package into requirements.txt
+- [x] T002 Create Neo4j adapter boilerplate in src/graph/neo4j_client.py (empty classes: Neo4jClient, Neo4jGraph, Neo4jResultSet)
+- [x] T003 Create conftest.py boilerplate in tests/ for Neo4j database fixtures
 
 ---
 
@@ -27,26 +27,26 @@
 
 ### Adapter Implementation
 
-- [ ] T004 [P] Implement Neo4jClient singleton class in src/graph/neo4j_client.py with: _driver lazy initialization, get_driver() method, connection pooling configuration, URI/user/password/database attributes per data-model.md
-- [ ] T005 [P] Implement Neo4jGraph session manager in src/graph/neo4j_client.py with: query(cypher, params) method, result set normalization, error handling per contract
-- [ ] T006 [P] Implement Neo4jResultSet adapter in src/graph/neo4j_client.py with: .result_set list attribute, __iter__() for dict iteration, node/relationship conversion to match FalkorDB dict structure per contract
-- [ ] T007 Implement Neo4jClient.verify_connectivity() in src/graph/neo4j_client.py to test connection on first access (execute simple RETURN 1 query)
-- [ ] T008 Implement Neo4jGraph._ensure_bootstrap() in src/graph/neo4j_client.py with idempotent schema bootstrap: CREATE CONSTRAINT for MetaType {name}, ObjectNode {node_id}, HumanAuditLog {audit_id}; CREATE INDEX for ObjectNode {domain_scope}, {meta_type} per FR-005, FR-006, research.md Decision 5
+- [x] T004 [P] Implement Neo4jClient singleton class in src/graph/neo4j_client.py with: _driver lazy initialization, get_driver() method, connection pooling configuration, URI/user/password/database attributes per data-model.md
+- [x] T005 [P] Implement Neo4jGraph session manager in src/graph/neo4j_client.py with: query(cypher, params) method, result set normalization, error handling per contract
+- [x] T006 [P] Implement Neo4jResultSet adapter in src/graph/neo4j_client.py with: .result_set list attribute, __iter__() for dict iteration, node/relationship conversion to match FalkorDB dict structure per contract
+- [x] T007 Implement Neo4jClient.verify_connectivity() in src/graph/neo4j_client.py to test connection on first access (execute simple RETURN 1 query)
+- [x] T008 Implement Neo4jGraph._ensure_bootstrap() in src/graph/neo4j_client.py with idempotent schema bootstrap: CREATE CONSTRAINT for MetaType {name}, ObjectNode {node_id}, HumanAuditLog {audit_id}; CREATE INDEX for ObjectNode {domain_scope}, {meta_type} per FR-005, FR-006, research.md Decision 5
 
 ### Client Module Setup
 
-- [ ] T009 Create get_graph() factory function in src/graph/client.py with: auto-detection logic checking NEO4J_URI env var, Neo4j instantiation if present, FalkorDB fallback if absent, singleton pattern per data-model.md, FR-003
+- [x] T009 Create get_graph() factory function in src/graph/client.py with: auto-detection logic checking NEO4J_URI env var, Neo4j instantiation if present, FalkorDB fallback if absent, singleton pattern per data-model.md, FR-003
 
 ### Test Infrastructure
 
-- [ ] T010 [P] Create pytest fixtures in tests/conftest.py for per-test Neo4j database creation/teardown with: database naming strategy (UUID suffix to prevent collisions), CREATE DATABASE before test, DROP DATABASE after test, cleanup on failures per FR-007, research.md Decision 3
-- [ ] T011 [P] Create Neo4j test configuration fixtures in tests/conftest.py with: NEO4J_URI from env or default, credentials from env, database name management per quickstart.md
+- [x] T010 [P] Create pytest fixtures in tests/conftest.py for per-test Neo4j database creation/teardown with: database naming strategy (UUID suffix to prevent collisions), CREATE DATABASE before test, DROP DATABASE after test, cleanup on failures per FR-007, research.md Decision 3
+- [x] T011 [P] Create Neo4j test configuration fixtures in tests/conftest.py with: NEO4J_URI from env or default, credentials from env, database name management per quickstart.md
 
 ### Error Handling & Logging
 
-- [ ] T012 [P] Implement connection retry logic with exponential backoff in Neo4jClient._with_retries() in src/graph/neo4j_client.py: 3 retries, max 5 seconds total, exponential backoff (0.5s, 1s, 2s), raise RuntimeError with clear message after exhaustion per FR-013, research.md Decision 2
-- [ ] T013 [P] Add comprehensive logging in src/graph/neo4j_client.py for: connection events (startup, success), retry attempts (with delay), bootstrap operations (constraint/index creation), failures with actionable messages per FR-010, spec §Edge Cases
-- [ ] T014 Add password masking to logged connection URIs in src/graph/neo4j_client.py (log "bolt://user@host:port/db" without password) per FR-010
+- [x] T012 [P] Implement connection retry logic with exponential backoff in Neo4jClient._with_retries() in src/graph/neo4j_client.py: 3 retries, max 5 seconds total, exponential backoff (0.5s, 1s, 2s), raise RuntimeError with clear message after exhaustion per FR-013, research.md Decision 2
+- [x] T013 [P] Add comprehensive logging in src/graph/neo4j_client.py for: connection events (startup, success), retry attempts (with delay), bootstrap operations (constraint/index creation), failures with actionable messages per FR-010, spec §Edge Cases
+- [x] T014 Add password masking to logged connection URIs in src/graph/neo4j_client.py (log "bolt://user@host:port/db" without password) per FR-010
 
 **Checkpoint**: All adapter classes complete, tests execute successfully with Neo4j. Ready to begin parallel user story implementation.
 
