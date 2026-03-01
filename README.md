@@ -1,4 +1,4 @@
- # generic_database_metadata_mcp
+ # GlossaryWeaver
 
 A **stigmergic, context-frugal metadata MCP server** backed by **FalkorDBLite** (the lightweight embedded FalkorDB graph engine), with a **read-only visual web dashboard**.
 
@@ -302,7 +302,7 @@ Claude Desktop reads MCP server configuration from a JSON file.
 ```json
 {
   "mcpServers": {
-    "generic-db-metadata": {
+    "glossary-weaver": {
       "url": "http://127.0.0.1:8000/sse"
     }
   }
@@ -314,7 +314,7 @@ Claude Desktop reads MCP server configuration from a JSON file.
 ```json
 {
   "mcpServers": {
-    "generic-db-metadata": {
+    "glossary-weaver": {
       "command": "python",
       "args": ["-m", "src.mcp_server.server"],
       "cwd": "/absolute/path/to/generic_database_metadata_mcp",
@@ -340,7 +340,7 @@ GitHub Copilot in VS Code supports MCP servers via workspace or user settings.
 ```json
 {
   "servers": {
-    "generic-db-metadata": {
+    "glossary-weaver": {
       "type": "sse",
       "url": "http://127.0.0.1:8000/sse"
     }
@@ -353,7 +353,7 @@ GitHub Copilot in VS Code supports MCP servers via workspace or user settings.
 ```json
 {
   "github.copilot.chat.mcp.servers": {
-    "generic-db-metadata": {
+    "glossary-weaver": {
       "type": "sse",
       "url": "http://127.0.0.1:8000/sse"
     }
@@ -372,7 +372,7 @@ After saving, open the **Copilot Chat** panel (`Ctrl+Shift+I` / `Cmd+Shift+I`) a
 ```json
 {
   "mcpServers": {
-    "generic-db-metadata": {
+    "glossary-weaver": {
       "httpUrl": "http://127.0.0.1:8000/sse",
       "timeout": 30000
     }

@@ -1,4 +1,4 @@
-"""MCP server entry-point for the Stigmergic MCP Metadata Server.
+"""MCP server entry-point for GlossaryWeaver.
 
 Uses the standard mcp.server.fastmcp.FastMCP with SSE transport via uvicorn.
 """
@@ -41,7 +41,7 @@ app = _create_app()
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    logger.info("Starting Stigmergic MCP Metadata Server on http://127.0.0.1:8000 (SSE)...")
+    logger.info("Starting GlossaryWeaver on http://127.0.0.1:8000 (SSE)...")
     
     try:
         import uvicorn
