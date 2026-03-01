@@ -197,44 +197,44 @@
 
 ### Documentation & Migration Guide
 
-- [ ] T053 Create comprehensive Neo4j migration guide in docs/neo4j-migration.md: what changed, why, how to configure, common issues, rollback procedure
-- [ ] T054 Update README.md to document Neo4j as primary backend with FalkorDB as fallback option (update constellation v1.4.0 reference)
-- [ ] T055 Document Neo4j test database setup in TESTING.md: how to configure test fixtures, how per-test databases work, troubleshooting orphaned test databases
-- [ ] T056 Update developer setup guide in CONTRIBUTING.md: Neo4j installation, environment variable configuration, connection verification steps
+- [x] T053 Create comprehensive Neo4j migration guide in docs/neo4j-migration.md: what changed, why, how to configure, common issues, rollback procedure
+- [x] T054 Update README.md to document Neo4j as primary backend with FalkorDB as fallback option (update constellation v1.4.0 reference)
+- [x] T055 Document Neo4j test database setup in TESTING.md: how to configure test fixtures, how per-test databases work, troubleshooting orphaned test databases
+- [x] T056 Update developer setup guide in CONTRIBUTING.md: Neo4j installation, environment variable configuration, connection verification steps
 
 ### Logging & Observability
 
-- [ ] T057 [P] Add structured logging to schema bootstrap in src/graph/neo4j_client.py: log constraint creation attempts, success/failure, timing
-- [ ] T058 [P] Add structured logging to connection retry in src/graph/neo4j_client.py: log retry N/max, backoff delay, cumulative elapsed time, final status
-- [ ] T059 Verify Neo4j connection URI logged on startup (excluding password) in src/mcp_server/server.py startup sequence per FR-010
+- [x] T057 [P] Add structured logging to schema bootstrap in src/graph/neo4j_client.py: log constraint creation attempts, success/failure, timing
+- [x] T058 [P] Add structured logging to connection retry in src/graph/neo4j_client.py: log retry N/max, backoff delay, cumulative elapsed time, final status
+- [x] T059 Verify Neo4j connection URI logged on startup (excluding password) in src/mcp_server/server.py startup sequence per FR-010
 
 ### Performance Testing
 
-- [ ] T060 Measure and document cold start latency with Neo4j: connection + schema bootstrap time, target <500ms per contract, research.md Decision 2
-- [ ] T061 Measure and document simple query latency: MATCH (n:ObjectNode) RETURN n query timing, target <10ms per contract
-- [ ] T062 Measure and document stigmergic edge operation latency: create edge, update score, verify <50ms overhead per plan.md
+- [x] T060 Measure and document cold start latency with Neo4j: connection + schema bootstrap time, target <500ms per contract, research.md Decision 2
+- [x] T061 Measure and document simple query latency: MATCH (n:ObjectNode) RETURN n query timing, target <10ms per contract
+- [x] T062 Measure and document stigmergic edge operation latency: create edge, update score, verify <50ms overhead per plan.md
 
 ### Constitution Compliance Verification
 
-- [ ] T063 Verify Rule 2.1-2.8 (Dynamic Pydantic Ontology): confirm Pydantic models unchanged (no backend-specific modifications)
-- [ ] T064 Verify Rule 3.1 (Bounded Depth): confirm Cypher queries remain limited to *1..2 hops (no unbounded traversals introduced)
-- [ ] T065 Verify Rule 3.2 (Semantic Compression): confirm no raw JSON topology dumps, only context-frugal queries per FR-004
-- [ ] T066 Verify Rule 3.3 (Pagination): confirm >5 nodes triggers pagination (verify in dashboard graph payload)
-- [ ] T067 Verify Rule 4.1-4.5 (Stigmergic Execution): confirm 30-day decay, confidence scoring, pruning work identically to FalkorDB
-- [ ] T068 Verify Rule 5.2 (Domain Scope): confirm domain_scope filtering applied in all queries (never overridden by params)
-- [ ] T069 Verify Rule 6.3 (Ephemeral Test Databases): confirm per-test database creation/teardown working correctly with zero cross-contamination
+- [x] T063 Verify Rule 2.1-2.8 (Dynamic Pydantic Ontology): confirm Pydantic models unchanged (no backend-specific modifications)
+- [x] T064 Verify Rule 3.1 (Bounded Depth): confirm Cypher queries remain limited to *1..2 hops (no unbounded traversals introduced)
+- [x] T065 Verify Rule 3.2 (Semantic Compression): confirm no raw JSON topology dumps, only context-frugal queries per FR-004
+- [x] T066 Verify Rule 3.3 (Pagination): confirm >5 nodes triggers pagination (verify in dashboard graph payload)
+- [x] T067 Verify Rule 4.1-4.5 (Stigmergic Execution): confirm 30-day decay, confidence scoring, pruning work identically to FalkorDB
+- [x] T068 Verify Rule 5.2 (Domain Scope): confirm domain_scope filtering applied in all queries (never overridden by params)
+- [x] T069 Verify Rule 6.3 (Ephemeral Test Databases): confirm per-test database creation/teardown working correctly with zero cross-contamination
 
 ### Code Quality
 
-- [ ] T070 [P] Remove any FalkorDB-specific comments or TODOs from src/dashboard/graph_service.py (e.g., "FalkorDB workaround" comments if applicable)
-- [ ] T071 [P] Review error messages in src/graph/neo4j_client.py for clarity and actionability (users should know what to fix)
-- [ ] T072 Run type checking (mypy or similar) against src/graph/neo4j_client.py and verify zero errors per Python 3.11+ requirements
+- [x] T070 [P] Remove any FalkorDB-specific comments or TODOs from src/dashboard/graph_service.py (e.g., "FalkorDB workaround" comments if applicable)
+- [x] T071 [P] Review error messages in src/graph/neo4j_client.py for clarity and actionability (users should know what to fix)
+- [x] T072 Run type checking (mypy or similar) against src/graph/neo4j_client.py and verify zero errors per Python 3.11+ requirements
 
 ### Final Integration Test
 
-- [ ] T073 Execute full integration test suite: pytest tests/unit/ tests/contract/ tests/integration/ -v --tb=short with Neo4j backend, verify 100% pass rate
-- [ ] T074 Execute full integration test suite with FalkorDB backend (NEO4J_URI unset), verify 100% pass rate for backward compatibility
-- [ ] T075 Manual smoke test: start MCP server with NEO4J_URI configured, start dashboard, execute sample MCP tools, verify graph operations and dashboard rendering
+- [x] T073 Execute full integration test suite: pytest tests/unit/ tests/contract/ tests/integration/ -v --tb=short with Neo4j backend, verify 100% pass rate
+- [x] T074 Execute full integration test suite with FalkorDB backend (NEO4J_URI unset), verify 100% pass rate for backward compatibility
+- [x] T075 Manual smoke test: start MCP server with NEO4J_URI configured, start dashboard, execute sample MCP tools, verify graph operations and dashboard rendering
 
 **Checkpoint**: Phase 7 complete - all quality requirements met, documentation current, Constitution compliant, performance acceptable. Feature ready for merge.
 
